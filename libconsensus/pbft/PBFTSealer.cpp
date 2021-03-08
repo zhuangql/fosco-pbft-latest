@@ -63,7 +63,7 @@ void PBFTSealer::handleBlock()
                          << LOG_KV("nodeIdx", m_pbftEngine->nodeIdx())
                          << LOG_KV("hash", m_sealing.block->header().hash().abridged());
     m_pbftEngine->generatePrepare(m_sealing.block);
-    if (m_pbftEngine->shouldReset(*(m_sealing.block)))
+    if (m_pbftEngine->shouldReset(*(m_sealing.block))) //空块逻辑
     {
         resetSealingBlock();
         m_signalled.notify_all();

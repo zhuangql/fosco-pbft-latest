@@ -36,7 +36,7 @@ struct TimeManager
     unsigned m_emptyBlockGenTime = 1000;
 
     /// last execution finish time, only one will be used at last the finish time of executing tx by leader
-    uint64_t m_viewTimeout = 3 * m_emptyBlockGenTime;
+    uint64_t m_viewTimeout = 3 * m_emptyBlockGenTime;//重置共识时间，和config相关
     //PBFT共识过程中，区块执行的超时时间，最少为3s, supported_version>=v2.6.0时，配置项生效
     //执行超时的结果是怎样？？？ zhuangql  应该是viewchange的超时时间
     uint64_t m_consensusTimeout = 3 * m_emptyBlockGenTime;

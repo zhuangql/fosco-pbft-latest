@@ -82,7 +82,7 @@ struct PBFTMsgPacket
     /// endpoint
     std::string endpoint;//网络直接发送节点的ip和端口   即session？
     // the node that disconnected from this node, but the packet should reach
-    //消息转发优化的参数 ，第一版可忽略
+    //消息转发优化的参数 
     std::shared_ptr<dev::h512s> forwardNodes;
 
     using Ptr = std::shared_ptr<PBFTMsgPacket>;

@@ -109,7 +109,7 @@ void PBFTEngine::stop()
 }
 
 void PBFTEngine::initPBFTEnv(unsigned view_timeout)
-{
+{//初次驱动 比一定是 创世块
     m_consensusBlockNumber = 0;//创世块，正在等待的区块号为0
     m_view = m_toView = 0; //timeout时toview会+1
     m_leaderFailed = false;//标记leader状态
@@ -121,7 +121,7 @@ void PBFTEngine::initPBFTEnv(unsigned view_timeout)
     m_timeManager.initTimerManager(view_timeout);
     //2。0。0的initPBF-TEnv只有调用ConsensusEngineBase::res-etConfig();
     reportBlock(*block);
-    initBackupDB();
+    initBackupDB();   //待确认  节点在当前轮重启 继续commit阶段的共识
     PBFTENGINE_LOG(INFO) << "[PBFT init env successfully]";
 }
 
@@ -142,7 +142,7 @@ bool PBFTEngine::shouldSeal()
     {
         /// if current node is the next leader
         /// and it has been notified to seal new block, return true
-        //下一个leader已经被通知才可以seal新区块
+        //下一个leader已经被通知才可以seal新区块（下一个leader被通知的时间点是 执行完上一个leader的区块）
         if (m_notifyNextLeaderSeal && getNextLeader() == nodeIdx())
         {
             return true;
@@ -150,15 +150,14 @@ bool PBFTEngine::shouldSeal()
         //不是下一个leader不能seal
         return false;
     }
-//应该和db有关系
-    //当前leader
-    // 判断是否要把committed_prepare拿出来重放1.0.0
+    // 判断是否要把committed_prepare拿出来重放（大规模节点失败/发生viewchange时，可能重放也可能重新seal,重新seal的在isvalidprepare中会被屏蔽）
     //1、commitedPrepareCache的高度！=当前轮共识高度，说明本轮共识未达到prepaerd，可以seal当前轮区块
-    //2、commitedPrepareCache的高度==当前轮共识高度，说明当前轮共识在commit阶段但未完成
+    //2、commitedPrepareCache的高度==当前轮共识高度，说明当前轮共识在commit阶段但未完成，不能seal新区块
     if (m_reqCache->committedPrepareCache().height == m_consensusBlockNumber)
     {
         //1、rawPrepareChche的高度==当前轮共识高度，说明当前轮commit阶段未完成
-        //2、rawPrepareChche的高度！=当前轮共识高度，说明当前高度在commit阶段发生了viewChange，raw高度为-1
+        //1、节点重启防止分叉时，rwa高度为-1，rawPrepareChche的高度！=当前轮共识高度
+        //2、当前高度在commit阶段发生了viewChange，raw高度为-1，rawPrepareChche的高度！=当前轮共识高度
         if (m_reqCache->rawPrepareCacheHeight() != m_consensusBlockNumber)
         {
             rehandleCommitedPrepareCache(m_reqCache->committedPrepareCache());
@@ -354,7 +353,7 @@ PrepareReq::Ptr PBFTEngine::constructPrepareReq(dev::eth::Block::Ptr _block)
     // not enable-prepare-with-txs-hash or the empty block
     else
     {
-        m_threadPool->enqueue([this, prepareReq, engineBlock]() {
+        m_threadPool->enqueue([this, prepareReq, engineBlock]() {//入线程池队列是什么作用？没看
             try
             {
                 std::shared_ptr<bytes> prepare_data = std::make_shared<bytes>();
@@ -382,7 +381,7 @@ void PBFTEngine::sendPrepareMsgFromLeader(
 bool PBFTEngine::generatePrepare(dev::eth::Block::Ptr _block)
 {
     Guard l(m_mutex);
-    m_notifyNextLeaderSeal = false;
+    m_notifyNextLeaderSeal = false;//为什么放在这里？
     auto prepareReq = constructPrepareReq(_block);
 
     if (prepareReq->pBlock->getTransactionSize() == 0 && m_omitEmptyBlock)
@@ -489,7 +488,7 @@ bool PBFTEngine::broadcastViewChangeReq()
                           << LOG_KV("myNode", m_keyPair.pub().abridged());
     /// view change not caused by fast view change
     if (!m_fastViewChange)
-    {
+    {//快速视图追赶  空快 ！！！
         PBFTENGINE_LOG(WARNING) << LOG_DESC("ViewChangeWarning: not caused by omit empty block ")
                                 << LOG_KV("v", m_view) << LOG_KV("toV", m_toView)
                                 << LOG_KV("curNum", m_highestBlock.number())
@@ -648,7 +647,7 @@ CheckResult PBFTEngine::isValidPrepare(PrepareReq const& req, std::ostringstream
     }
     //如果此时节点的共识仍落后，说明同步功能没能解决问题，则由节点自己收集未来块消息追赶
 
-    //1、eq是当前共识高度之前的消息，则肯定无效
+    //1、req是当前共识高度之前的消息，则肯定无效
     //2、req是当前高度共识的消息但view小于当前view则肯定失效 （本质上是检查序号n）
     if (hasConsensused(req))
     {
@@ -662,12 +661,12 @@ CheckResult PBFTEngine::isValidPrepare(PrepareReq const& req, std::ostringstream
     // Some nodes cache pbftBackup，but the consensus failed because no enough commit requests were
     // collected
     // 2. view change occurred in the system, switch to the new leader without pbftBackup
-    // 3. the new leader generate an empty-block, and reset the changeCycle to 0
+    // 3. the new leader generate an empty-block, and reset the changeCycle to 0  看一下！！！
     // 4. the other 2*f nodes received the prepare with empty block, but rejected the prepare for
     // isHashSavedAfterCommit check failed
     // 5. the changeCycle of the other nodes with pbftBackup are larger than the new leader, the
-    // system suffers from view-catchup
-    //没看空块处理逻辑 zhuangql
+    // system suffers from view-catchup  //看一下！！！
+    //没看空块处理逻辑 zhuangql  
     if (req.isEmpty && req.height == m_reqCache->committedPrepareCache().height)
     {
         // here for debug
@@ -679,7 +678,7 @@ CheckResult PBFTEngine::isValidPrepare(PrepareReq const& req, std::ostringstream
                                      m_reqCache->committedPrepareCache().block_hash.abridged());
     }
     //1、req不为空 2、req的高度肯定大于等于当前共识高度 若等于当前高度则view等于大于当前view
-    // 3、对于已经达到commit阶段的区块，一定要上链？zhuangql
+    // 3、对于已经达到commit阶段的区块，根据backupDB节点的数量决定会不会上链
     if (!req.isEmpty && !isHashSavedAfterCommit(req))
     {
         PBFTENGINE_LOG(DEBUG) << LOG_DESC("InvalidPrepare: not saved after commit")
@@ -877,17 +876,17 @@ void PBFTEngine::execBlock(Sealing& sealing, PrepareReq::Ptr _req, std::ostrings
     auto notify_time_cost = utcTime() - record_time;
     record_time = utcTime();
 
-    m_blockSync->noteSealingBlockNumber(sealing.block->header().number());
+    m_blockSync->noteSealingBlockNumber(sealing.block->header().number());  //同步？
     auto noteSealing_time_cost = utcTime() - record_time;
     record_time = utcTime();
 
     /// ignore the signature verification of the transactions have already been verified in
     /// transation pool
     /// the transactions that has not been verified by the txpool should be verified
-    m_txPool->verifyAndSetSenderForBlock(*sealing.block);
+    m_txPool->verifyAndSetSenderForBlock(*sealing.block);   //？？！！！没看
     auto verifyAndSetSender_time_cost = utcTime() - record_time;
     record_time = utcTime();
-    sealing.p_execContext = executeBlock(*sealing.block);
+    sealing.p_execContext = executeBlock(*sealing.block);//执行的内容是什么？！！！
     auto exec_time_cost = utcTime() - record_time;
     PBFTENGINE_LOG(INFO)
         << LOG_DESC("execBlock") << LOG_KV("blkNum", sealing.block->header().number())
@@ -1023,7 +1022,7 @@ bool PBFTEngine::handlePrepareMsg(PrepareReq::Ptr prepareReq, std::string const&
         clearPreRawPrepare(); //优化
         return false;
     }
-    /// update the view for given idx
+    /// update the view for given idx  //存储各个节点视图的作用？？！！！
     updateViewMap(prepareReq->idx, prepareReq->view);
 
     if (valid_ret == CheckResult::FUTURE)
@@ -1088,7 +1087,7 @@ bool PBFTEngine::execPrepareAndGenerateSignMsg(
     PrepareReq::Ptr sign_prepare =
         std::make_shared<PrepareReq>(*_prepareReq, workingSealing, m_keyPair);
 
-    // destroy ExecutiveContext in m_destructorThread
+    // destroy ExecutiveContext in m_destructorThread   //没看？？？
     auto execContext = m_reqCache->prepareCache().p_execContext;
     HolderForDestructor<dev::blockverifier::ExecutiveContext> holder(std::move(execContext));
     m_destructorThread->enqueue(std::move(holder));
@@ -1294,7 +1293,7 @@ void PBFTEngine::reportBlockWithoutLock(Block const& block)
             m_reqCache->delInvalidViewChange(m_highestBlock);
         }
         resetConfig();
-        if (m_onCommitBlock)
+        if (m_onCommitBlock)  //动态调整区块大小内容
         {
             m_onCommitBlock(block.blockHeader().number(), block.getTransactionSize(),
                 m_timeManager.m_changeCycle);
@@ -1485,7 +1484,7 @@ bool PBFTEngine::handleViewChangeMsg(
         checkAndChangeView();
     }
     else
-    {
+    {   //什么情况下进入？！！！    2f+1个viewchange   收到f+1个
         VIEWTYPE min_view = 0;
         bool should_trigger = m_reqCache->canTriggerViewChange(
             min_view, m_f, m_toView, m_highestBlock, m_consensusBlockNumber);
@@ -1524,6 +1523,7 @@ bool PBFTEngine::isValidViewChangeReq(
                               << LOG_KV("INFO", oss.str());
         return false;
     }
+    。快速视图
     // +1 是为了防止触碰到刚好view正在切换的边界条件。   同一区块高度下才能发生多次viewchange
     //因为view落后的节点的view必定是低于(>2)其他正常节点的view
     //生成这条viewChange消息的节点的view慢于当前节点的view，则发送消息提醒同步
@@ -1598,7 +1598,7 @@ void PBFTEngine::checkAndChangeView()
         m_timeManager.m_lastConsensusTime = utcSteadyTime();
         m_view = m_toView.load();
         m_notifyNextLeaderSeal = false;
-        m_reqCache->triggerViewChange(m_view, m_blockChain->number());
+        m_reqCache->triggerViewChange(m_view, m_blockChain->number());//需要看一下！！！
         m_blockSync->noteSealingBlockNumber(m_blockChain->number());
     }
 }
@@ -1672,7 +1672,7 @@ void PBFTEngine::checkTimeout()
                                  << LOG_KV("timecost", t.elapsed() * 1000);
         }
     }
-    if (flag && m_onViewChange)
+    if (flag && m_onViewChange)  //viewChange后resetBlock的情况？！！！
         m_onViewChange();
 }
 
@@ -2197,7 +2197,7 @@ void PBFTEngine::onReceiveGetMissedTxsRequest(
                                 << LOG_KV("errorInfo", boost::diagnostic_information(_e));
     }
 }
-
+//p2p线程调用
 void PBFTEngine::handleP2PMessage(
     NetworkException _exception, std::shared_ptr<P2PSession> _session, P2PMessage::Ptr _message)
 {

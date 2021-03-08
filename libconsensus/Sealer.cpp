@@ -65,7 +65,7 @@ bool Sealer::shouldSeal()
         ReadGuard l(x_sealing);
         sealed = m_sealing.block->isSealed();
     }
-    //1、区块是空的 ，即没有sealer，则应该seal  （最重要，只关注这个就好）
+    //1、区块是空的 ，即没有sealer，则应该seal  （最重要，只关注这个就好）  区块是空的，sealer就可以往里添交易
     //2、sealler封装线程开始 
     //3、本节点是sealer类型，从engine获取  4、同步区块模块没有在工作 ？ zhuangql
     return (!sealed && m_startConsensus &&
@@ -91,13 +91,13 @@ void Sealer::reportNewBlock()
         m_consensusEngine->reportBlock(*p_block);
         WriteGuard l(x_sealing);
         {
-            //需要看一下 zhuangql
+            //需要看一下 zhuangql   什么情况下发生？！！！
             if (shouldResetSealing())
             {
                 SEAL_LOG(DEBUG) << "[reportNewBlock] Reset sealing: [number]:  "
                                 << m_blockChain->number()
                                 << ", sealing number:" << m_sealing.block->blockHeader().number();
-                resetSealingBlock();
+                resetSealingBlock();   //sealer 从高度n的区块 为高度n+1区块 populate 一个空区块
             }
         }
     }
@@ -112,7 +112,7 @@ void Sealer::doWork(bool wait)
 {
     //上一个区块被commit后，向engine报告新区块的状态环境                                        //创世时不进来
     reportNewBlock();
-    //以下分析不足
+    //以下分析不足  没搞懂？！！！
      //区块是空的 ，即没有sealer，则应该seal    && engine中区块已经被执行 即m_notifyNextLeader Seal = true
      //两种情况：1、正常轮到本节点seal  2、下一个节点提前seal也能进入开始seal，此时sealling中有filter交易
     if (shouldSeal() && m_startConsensus.load())
@@ -125,7 +125,7 @@ void Sealer::doWork(bool wait)
             uint64_t tx_num = m_sealing.block->getTransactionSize();
 
             /// add this to in case of unlimited-loop
-            //交易池队列的size时候为0，标记是否同步交易池，即load交易
+            //交易池队列的size是否为0，标记是否同步交易池，即load交易
             if (m_txPool->status().current == 0)
             {
                 m_syncTxPool = false;
@@ -149,7 +149,7 @@ void Sealer::doWork(bool wait)
                 m_signalled.wait_for(l, boost::chrono::milliseconds(1));// 为什么等待 zhuangql
                 return;
             }
-            if (shouldHandleBlock())
+            if (shouldHandleBlock())//1、封装的区块高度 为当前区块高度+1  2、当前节点为leader
                 handleBlock();
         }
     }

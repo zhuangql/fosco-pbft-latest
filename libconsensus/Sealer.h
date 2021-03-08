@@ -138,7 +138,7 @@ protected:
             canHandleBlockForNextLeader() && (tx_num >= maxTxsCanSeal || reachBlockIntervalTime());//sealer的达到区块间隔时间
             //2、区块sealing开始共识需要满足的标准（达到区块间隔）
             //2.1sealing的交易数达到最大交易数量  或者
-            //2.2达到空块产生时间或者sealing中的交易数大于0并且达到最小区块产生时间
+            //2.2达到空块产生时间或者sealing中的交易数大于0并且达到最小区块产生时间500ms
         if (enough)
         {
             SEAL_LOG(DEBUG) << "[checkTxsEnough] Tx enough: [txNum]: " << tx_num;
@@ -226,7 +226,7 @@ protected:
     Handler<int64_t> m_blockSubmitted;
 
     /// the maximum transaction number that can be sealed in a block
-    uint64_t m_maxBlockCanSeal = 1000;//这个变量第一版应该先不管
+    uint64_t m_maxBlockCanSeal = 1000;//
     mutable SharedMutex x_maxBlockCanSeal;
 };
 }  // namespace consensus

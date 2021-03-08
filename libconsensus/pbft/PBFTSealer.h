@@ -194,14 +194,14 @@ protected:
     uint64_t m_lastTimeoutTx = 0;//2。0。0版本有
     /// the maximum number of transactions that has been consensused without timeout
     uint64_t m_maxNoTimeoutTx = 0;//2。0。0版本有
-    /// timeout counter    //2。0。0版本有以下4个
-    int64_t m_timeoutCount = 0;    
+    /// timeout counter  动态调整区块大小  //2。0。0版本有以下4个
+    int64_t m_timeoutCount = 0;     
     //start时动态调整区块大小时候设定的，不知道是不是只为动态调整区块大小服务
     //链上最高区块号
     uint64_t m_lastBlockNumber = 0;
     //动态调整一个区块内可打包最大交易数的算法，
     //该算法会根据历史交易处理情况动态调整区块内可打包的最大交易数，默认开启
-    bool m_enableDynamicBlockSize = true;   //不考虑
+    bool m_enableDynamicBlockSize = true;   //动态调整
     float m_blockSizeIncreaseRatio = 0.5;
 };
 }  // namespace consensus
