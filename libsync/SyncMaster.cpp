@@ -35,7 +35,7 @@ using namespace dev::blockverifier;
 
 void SyncMaster::printSyncInfo()
 {
-    auto pendingSize = m_txPool->pendingSize();
+    auto pendingSize = m_txPool->pendingSize();//交易池中交易数量
     auto peers = m_syncStatus->peers();
     std::string peer_str;
     for (auto const& peer : *peers)
@@ -139,7 +139,7 @@ void SyncMaster::stop()
 void SyncMaster::doWork()
 {
     // Debug print
-    if (isSyncing())
+    if (isSyncing())    //同步状态：空闲/下载中
         printSyncInfo();
     // maintain the connections between observers/sealers
     maintainPeersConnection();
@@ -563,7 +563,7 @@ bool SyncMaster::maintainDownloadingQueue()
 
 void SyncMaster::maintainPeersConnection()
 {
-    // Get active peers
+    // Get active peers                                                                                                         从p2p获取链接的有效节点
     auto sessions = m_service->sessionInfosByProtocolID(m_protocolId);
     set<NodeID> activePeers;
     for (auto const& session : sessions)
@@ -571,11 +571,11 @@ void SyncMaster::maintainPeersConnection()
         activePeers.insert(session.nodeID());
     }
 
-    // Get sealers and observer
+    // Get sealers and observer                                                                                        
     NodeIDs sealers = m_blockChain->sealerList();
     NodeIDs sealerOrObserver = sealers + m_blockChain->observerList();
 
-    // member set is [(sealer || observer) && activePeer && not myself]
+    // member set is [(sealer || observer) && activePeer && not myself]    memberSet表示 sealer+observer中与当前节点有链接的节点集，不包含自己
     set<NodeID> memberSet;
     bool hasMyself = false;
     for (auto const& member : sealerOrObserver)
@@ -588,12 +588,12 @@ void SyncMaster::maintainPeersConnection()
         hasMyself |= (member == m_nodeId);
     }
 
-    // Delete uncorrelated peers
+    // Delete uncorrelated peers                                                                                   删除同步节点列表中，与当前节点 没有链接 的节点（没有链接但是区块高度大于自己则不删除）
     int64_t currentNumber = m_blockChain->number();
     NodeIDs peersToDelete;
     m_syncStatus->foreachPeer([&](std::shared_ptr<SyncPeerStatus> _p) {
         NodeID id = _p->nodeId;
-        if (memberSet.find(id) == memberSet.end() && currentNumber >= _p->number)
+        if (memberSet.find(id) == memberSet.end() && currentNumber >= _p->number) 
         {
             // Only delete outsider whose number is smaller than myself
             peersToDelete.emplace_back(id);
@@ -607,7 +607,7 @@ void SyncMaster::maintainPeersConnection()
     }
 
 
-    // Add new peers
+    // Add new peers                                                                                                               在同步列表中添加，
     h256 const& currentHash = m_blockChain->numberHash(currentNumber);
     for (auto const& member : memberSet)
     {

@@ -80,7 +80,7 @@ public:
 
 public:
     NodeID nodeId;
-    int64_t number;
+    int64_t number;//区块高度？
     h256 genesisHash;
     h256 latestHash;
     DownloadRequestQueue reqQueue;

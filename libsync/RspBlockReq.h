@@ -37,8 +37,8 @@ class DownloadRequest
 {
 public:
     DownloadRequest(int64_t _fromNumber, int64_t _size) : fromNumber(_fromNumber), size(_size) {}
-    int64_t fromNumber;
-    int64_t size;
+    int64_t fromNumber; //节点ID？t
+    int64_t size; //区块大小？t
 };
 
 struct RequestQueueCmp
@@ -62,7 +62,7 @@ public:
 private:
     NodeID m_nodeId;
     mutable SharedMutex x_reqQueue;
-    std::priority_queue<DownloadRequest, std::vector<DownloadRequest>, RequestQueueCmp> m_reqQueue;
+    std::priority_queue<DownloadRequest, std::vector<DownloadRequest>, RequestQueueCmp> m_reqQueue;//优先用fromNumber排序
 };
 }  // namespace sync
 }  // namespace dev
