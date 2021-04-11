@@ -80,10 +80,10 @@ public:
 
 public:
     NodeID nodeId;
-    int64_t number;//区块高度？
+    int64_t number;//区块高度
     h256 genesisHash;
     h256 latestHash;
-    DownloadRequestQueue reqQueue;
+    DownloadRequestQueue reqQueue;;//用nodeId赋值
     bool isSealer = false;
 };
 
@@ -156,8 +156,8 @@ private:
     PROTOCOL_ID m_protocolId;
     NodeID m_nodeId;
     mutable SharedMutex x_peerStatus;
-    std::map<NodeID, std::shared_ptr<SyncPeerStatus>> m_peersStatus;
-    DownloadingBlockQueue m_downloadingBlockQueue;
+    std::map<NodeID, std::shared_ptr<SyncPeerStatus>> m_peersStatus;//peerStatus的列表
+    DownloadingBlockQueue m_downloadingBlockQueue;//正在下载的区块队列
 };
 
 }  // namespace sync

@@ -59,7 +59,7 @@ DownloadRequest DownloadRequestQueue::topAndPop()
     if (m_reqQueue.empty())
         return DownloadRequest(0, 0);
 
-    // Merge tops of reqQueue.
+    // Merge tops of reqQueue. ？？？sync 什么情况下会发生
     // "Tops" means that the merge result of all tops can merge at one turn
     // Example:
     // top[x] (fromNumber, size)    range       merged range    merged tops(fromNumber, size)

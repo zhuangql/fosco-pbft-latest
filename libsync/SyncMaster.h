@@ -308,7 +308,7 @@ private:
     bool m_enableSendBlockStatusByTree;
 
     int64_t m_maxRequestNumber = 0;
-    uint64_t m_lastDownloadingRequestTime = 0;
+    uint64_t m_lastDownloadingRequestTime = 0;//上一次的下载请求时间
     int64_t m_lastDownloadingBlockNumber = 0;
     int64_t m_currentSealingNumber = 0;
     int64_t m_eachBlockDownloadingRequestTimeout = 1000;

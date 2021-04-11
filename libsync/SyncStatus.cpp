@@ -166,7 +166,7 @@ void SyncMasterStatus::foreachPeerRandom(
         swap(nodeIds[i], nodeIds[select]);
     }
 
-    // access _f() according to the random list
+    // access _f() according to the random list       nodelds随机排序的节点id的列表
     for (NodeID const& nodeId : nodeIds)
     {
         auto const& peer = m_peersStatus.find(nodeId);

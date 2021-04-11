@@ -164,7 +164,7 @@ void DownloadingBlockQueue::flushBufferToQueue()
 {
     WriteGuard l(x_buffer);
     bool ret = true;
-    while (m_buffer->size() > 0 && ret)
+    while (m_buffer->size() > 0 && ret) //对 每一个 区块区间 缓存 操作
     {
         auto blocksShard = m_buffer->front();
         m_buffer->pop_front();
@@ -191,19 +191,20 @@ bool DownloadingBlockQueue::flushOneShard(ShardPtr _blocksShard)
                     << LOG_KV("blocksShardSize", _blocksShard->blocksBytes.size());
 
 
-    RLP const& rlps = RLP(ref(_blocksShard->blocksBytes));
+    RLP const& rlps = RLP(ref(_blocksShard->blocksBytes));  //将缓存解码
     unsigned itemCount = rlps.itemCount();
     size_t successCnt = 0;
-    for (unsigned i = 0; i < itemCount; ++i)
+    for (unsigned i = 0; i < itemCount; ++i)//还原为 多个区块
     {
         try
         {
             shared_ptr<Block> block =
                 make_shared<Block>(rlps[i].toBytes(), CheckTransaction::Everything, false);
-            if (isNewerBlock(block))
+            if (isNewerBlock(block))//判断区块时候是新的
             {
                 successCnt++;
                 m_blocks.push(block);
+                //next content  is nothing in 2.0.0
                 // Note: the memory size occupied by Block object will increase to at least treble
                 // for:
                 // 1. txsCache of Block
@@ -238,7 +239,7 @@ void DownloadingBlockQueue::clearFullQueueIfNotHas(int64_t _blockNumber)
     bool needClear = false;
     {
         ReadGuard l(x_blocks);
-
+        //下载队列如果满了，并且队头区块高度 大于 m_blockChain->number() + 1，清空
         if (m_blocks.size() == c_maxDownloadingBlockQueueSize &&
             m_blocks.top()->header().number() > _blockNumber)
             needClear = true;

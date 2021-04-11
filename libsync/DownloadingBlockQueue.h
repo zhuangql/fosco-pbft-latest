@@ -42,7 +42,7 @@ public:
     {}
     int64_t fromNumber;
     int64_t size;
-    bytes blocksBytes;
+    bytes blocksBytes;//下载的区块区间
 };
 
 struct BlockQueueCmp

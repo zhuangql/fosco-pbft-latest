@@ -142,25 +142,25 @@ void SyncMaster::doWork()
     if (isSyncing())    //同步状态：空闲/下载中
         printSyncInfo();
     // maintain the connections between observers/sealers
-    maintainPeersConnection();
+    maintainPeersConnection();//维护（链接）同步节点列表
     m_downloadBlockProcessor->enqueue([this]() {
         try
         {
             // flush downloaded buffer into downloading queue
-            maintainDownloadingQueueBuffer();
+            maintainDownloadingQueueBuffer();//downloading:把区块缓存 转入 队列存放    idle:清空
             // Not Idle do
             if (isSyncing())
             {
                 // check and commit the downloaded block
                 if (m_syncStatus->state == SyncState::Downloading)
                 {
-                    bool finished = maintainDownloadingQueue();
+                    bool finished = maintainDownloadingQueue();//commit blocks
                     if (finished)
                         noteDownloadingFinish();
                 }
             }
             // send block-download-request to peers if this node is behind others
-            maintainPeersStatus();
+            maintainPeersStatus();//若符合条件，则变成downloading，发送 下载请求
         }
         catch (std::exception const& e)
         {
@@ -170,12 +170,12 @@ void SyncMaster::doWork()
         }
     });
     // send block-status to other nodes when commit a new block
-    maintainBlocks();
+    maintainBlocks();//发送 同步状态消息包       新区块上链发/5s发一次
     // send block to other nodes
     m_sendBlockProcessor->enqueue([this]() {
         try
         {
-            maintainBlockRequest();
+            maintainBlockRequest();//回复下载请求，发送区块。每次只给200ms时间发送
         }
         catch (std::exception const& e)
         {
@@ -224,7 +224,7 @@ void SyncMaster::maintainBlocks()
         return;
     }
 
-    if (!m_newBlocks && utcSteadyTime() <= m_maintainBlocksTimeout)
+    if (!m_newBlocks && utcSteadyTime() <= m_maintainBlocksTimeout)//往下走的条件 1 新区块上链  2 无新区块上链但超时5s
     {
         return;
     }
@@ -234,7 +234,7 @@ void SyncMaster::maintainBlocks()
 
 
     int64_t number = m_blockChain->number();
-    h256 const& currentHash = m_blockChain->numberHash(number);
+    h256 const& currentHash = m_blockChain->numberHash(number); //？？？   引用
 
     if (m_syncTreeRouter)
     {
@@ -289,7 +289,7 @@ bool SyncMaster::sendSyncStatusByNodeId(
 void SyncMaster::maintainPeersStatus()
 {
     uint64_t currentTime = utcTime();
-    if (isSyncing())
+    if (isSyncing())//threr is a diffience with 2.0.0 :每发送一个区块下载请求后 需要等一会儿在发送同步请求？ //每个区块200ms时间
     {
         auto maxTimeout = std::max((int64_t)c_respondDownloadRequestTimeout,
             (int64_t)m_eachBlockDownloadingRequestTimeout *
@@ -311,7 +311,7 @@ void SyncMaster::maintainPeersStatus()
     int64_t currentNumber = m_blockChain->number();
     int64_t maxPeerNumber = 0;
     h256 latestHash;
-    m_syncStatus->foreachPeer([&](shared_ptr<SyncPeerStatus> _p) {
+    m_syncStatus->foreachPeer([&](shared_ptr<SyncPeerStatus> _p) {//找到我知道的 最高区块
         if (_p->number > maxPeerNumber)
         {
             latestHash = _p->latestHash;
@@ -320,7 +320,7 @@ void SyncMaster::maintainPeersStatus()
         return true;
     });
 
-    // update my known
+    // update my known  //更新 变量 （已知的 最高区块）
     if (maxPeerNumber > currentNumber)
     {
         WriteGuard l(m_syncStatus->x_known);
@@ -336,7 +336,7 @@ void SyncMaster::maintainPeersStatus()
         return;
     }
 
-    // Not to start download when mining or no need
+    // Not to start download when mining or no need     peer中的最高区块号<= 本节点正在打包的区块号  或者 和本节点最高区块号相同时，不需要去同步
     {
         ReadGuard l(x_currentSealingNumber);
         if (maxPeerNumber <= m_currentSealingNumber || maxPeerNumber == currentNumber)
@@ -357,13 +357,13 @@ void SyncMaster::maintainPeersStatus()
     // Start download
     noteDownloadingBegin();
 
-    // Choose to use min number in blockqueue or max peer number
+    // Choose to use min number in blockqueue or max peer number    1. 本节点区块号 >= peers中已知的最高区块号 时候，不需要去同步
     int64_t maxRequestNumber = maxPeerNumber;
     BlockPtr topBlock = m_syncStatus->bq().top();
     if (nullptr != topBlock)
     {
         int64_t minNumberInQueue = topBlock->header().number();
-        maxRequestNumber = min(maxPeerNumber, minNumberInQueue - 1);
+        maxRequestNumber = min(maxPeerNumber, minNumberInQueue - 1);//2.本节点区块号 >= 下载队列中最小区块号时，说明正在同步中，不需要去同步
     }
     if (currentNumber >= maxRequestNumber)
     {
@@ -376,20 +376,20 @@ void SyncMaster::maintainPeersStatus()
 
     // adjust maxRequestBlocksSize before request blocks
     m_syncStatus->bq().adjustMaxRequestBlocks();
-    // Sharding by c_maxRequestBlocks to request blocks
+    // Sharding by c_maxRequestBlocks to request blocks   向每个peer请求最大区块数是32，求出需要发送请求消息的peer的个数
     auto requestBlocksSize = m_syncStatus->bq().maxRequestBlocks();
     if (requestBlocksSize <= 0)
     {
         return;
     }
-    size_t shardNumber =
+    size_t shardNumber =//请求32个区块内，对一个节点请求，多余32个区块，像2个节点请求
         (maxRequestNumber - currentNumber + requestBlocksSize - 1) / requestBlocksSize;
-    size_t shard = 0;
+    size_t shard = 0;//表示从第几个节点取区块
 
     m_maxRequestNumber = 0;  // each request turn has new m_maxRequestNumber
     while (shard < shardNumber && shard < c_maxRequestShards)
     {
-        bool thisTurnFound = false;
+        bool thisTurnFound = false; //标记用的，当前节点是不是 有最高区块 的节点
         m_syncStatus->foreachPeerRandom([&](std::shared_ptr<SyncPeerStatus> _p) {
             if (m_syncStatus->knownHighestNumber <= 0 ||
                 _p->number != m_syncStatus->knownHighestNumber)
@@ -402,17 +402,17 @@ void SyncMaster::maintainPeersStatus()
             int64_t from = currentNumber + 1 + shard * requestBlocksSize;
             int64_t to = min(from + requestBlocksSize - 1, maxRequestNumber);
             if (_p->number < to)
-                return true;  // exit, to next peer
+                return true;  // exit, to next peer    没啥用
 
             // found a peer
             thisTurnFound = true;
             SyncReqBlockPacket packet;
             unsigned size = to - from + 1;
             packet.encode(from, size);
-            m_service->asyncSendMessageByNodeID(
+            m_service->asyncSendMessageByNodeID(//给节点发请求区块消息
                 _p->nodeId, packet.toMessage(m_protocolId), CallbackFuncWithSession(), Options());
 
-            // update max request number
+            // update max request number   这条很奇怪，没啥用
             m_maxRequestNumber = max(m_maxRequestNumber, to);
 
             SYNC_LOG(INFO) << LOG_BADGE("Download") << LOG_BADGE("Request")
@@ -424,7 +424,7 @@ void SyncMaster::maintainPeersStatus()
             return shard < shardNumber && shard < c_maxRequestShards;
         });
 
-        if (!thisTurnFound)
+        if (!thisTurnFound)//链接的节点数量 小于 收集的同步状态数量，并且链接的节点高度都小于已知的最高区块
         {
             int64_t from = currentNumber + shard * requestBlocksSize;
             int64_t to = min(from + requestBlocksSize - 1, maxRequestNumber);
@@ -441,7 +441,7 @@ bool SyncMaster::maintainDownloadingQueue()
 {
     int64_t currentNumber = m_blockChain->number();
     DownloadingBlockQueue& bq = m_syncStatus->bq();
-    if (currentNumber >= m_syncStatus->knownHighestNumber)
+    if (currentNumber >= m_syncStatus->knownHighestNumber)//current block number > known highest blknumber, clear downloading queue
     {
         bq.clear();
         return true;
@@ -449,7 +449,7 @@ bool SyncMaster::maintainDownloadingQueue()
 
     // pop block in sequence and ignore block which number is lower than currentNumber +1
     BlockPtr topBlock = bq.top();
-    if (topBlock && topBlock->header().number() > (m_blockChain->number() + 1))
+    if (topBlock && topBlock->header().number() > (m_blockChain->number() + 1))//check queue' top block  until currentNumber+1 and clear
     {
         SYNC_LOG(DEBUG) << LOG_DESC("Discontinuous block")
                         << LOG_KV("topNumber", topBlock->header().number())
@@ -479,7 +479,7 @@ bool SyncMaster::maintainDownloadingQueue()
                 if (exeCtx == nullptr)
                 {
                     bq.pop();
-                    topBlock = bq.top();
+                    topBlock = bq.top();//  maybe it have several blocks of  same block number  in priority queue
                     continue;
                 }
 
@@ -537,7 +537,7 @@ bool SyncMaster::maintainDownloadingQueue()
 
     currentNumber = m_blockChain->number();
     // has this request turn finished ?
-    if (currentNumber >= m_maxRequestNumber)
+    if (currentNumber >= m_maxRequestNumber)// after sended maxRequest has reveived,  notify  immidiately to continue to send request
         m_lastDownloadingRequestTime = 0;  // reset it to trigger request immediately
 
     // has download finished ?
@@ -571,13 +571,13 @@ void SyncMaster::maintainPeersConnection()
         activePeers.insert(session.nodeID());
     }
 
-    // Get sealers and observer                                                                                        
+    // Get sealers and observer
     NodeIDs sealers = m_blockChain->sealerList();
     NodeIDs sealerOrObserver = sealers + m_blockChain->observerList();
 
-    // member set is [(sealer || observer) && activePeer && not myself]    memberSet表示 sealer+observer中与当前节点有链接的节点集，不包含自己
+    // member set is [(sealer || observer) && activePeer && not myself]    /获取可链接的节点  memberSet表示 sealer+observer中与当前节点有链接的节点集，不包含自己
     set<NodeID> memberSet;
-    bool hasMyself = false;
+    bool hasMyself = false;//本节点时候在共识列表中
     for (auto const& member : sealerOrObserver)
     {
         /// find active peers
@@ -593,7 +593,7 @@ void SyncMaster::maintainPeersConnection()
     NodeIDs peersToDelete;
     m_syncStatus->foreachPeer([&](std::shared_ptr<SyncPeerStatus> _p) {
         NodeID id = _p->nodeId;
-        if (memberSet.find(id) == memberSet.end() && currentNumber >= _p->number) 
+        if (memberSet.find(id) == memberSet.end() && currentNumber >= _p->number)
         {
             // Only delete outsider whose number is smaller than myself
             peersToDelete.emplace_back(id);
@@ -608,7 +608,7 @@ void SyncMaster::maintainPeersConnection()
 
 
     // Add new peers                                                                                                               在同步列表中添加，
-    h256 const& currentHash = m_blockChain->numberHash(currentNumber);
+    h256 const& currentHash = m_blockChain->numberHash(currentNumber);//根据链接  增加新的活跃节点到 同步节点集中
     for (auto const& member : memberSet)
     {
         if (member != m_nodeId && !m_syncStatus->hasPeer(member))
@@ -620,7 +620,7 @@ void SyncMaster::maintainPeersConnection()
 
             if (m_needSendStatus)
             {
-                // send my status to her
+                // send my status to her        //发送本节点状态 给 新加入的节点
                 auto packet = m_syncMsgPacketFactory->createSyncStatusPacket(
                     m_nodeId, currentNumber, m_genesisHash, currentHash);
                 packet->alignedTime = utcTime();
@@ -639,7 +639,7 @@ void SyncMaster::maintainPeersConnection()
         }
     }
 
-    // Update sync sealer status
+    // Update sync sealer status    //更新 同步节点集中的节点 sealer 标识
     set<NodeID> sealerSet;
     for (auto sealer : sealers)
         sealerSet.insert(sealer);
@@ -660,29 +660,29 @@ void SyncMaster::maintainPeersConnection()
 
 void SyncMaster::maintainDownloadingQueueBuffer()
 {
-    if (m_syncStatus->state == SyncState::Downloading)
+    if (m_syncStatus->state == SyncState::Downloading) //进入下载流程  则把缓存导入 下载队列
     {
         m_syncStatus->bq().clearFullQueueIfNotHas(m_blockChain->number() + 1);
-        m_syncStatus->bq().flushBufferToQueue();
+        m_syncStatus->bq().flushBufferToQueue();//把下载的区块缓存 倒入 下载队列，并清空缓存
     }
     else
-        m_syncStatus->bq().clear();
+        m_syncStatus->bq().clear();//若处于idle，清空下载队列 和 下载缓存
 }
 
 void SyncMaster::maintainBlockRequest()
 {
-    uint64_t timeout = utcSteadyTime() + c_respondDownloadRequestTimeout;
+    uint64_t timeout = utcSteadyTime() + c_respondDownloadRequestTimeout; //200ms
     m_syncStatus->foreachPeerRandom([&](std::shared_ptr<SyncPeerStatus> _p) {
-        DownloadRequestQueue& reqQueue = _p->reqQueue;
+        DownloadRequestQueue& reqQueue = _p->reqQueue;//维护的每个 syncPeer 的下载请求 队列，这个队列是怎么维护的？
         if (reqQueue.empty())
-            return true;  // no need to respond
+            return true;  // no need to respond   队列为空，则不需要respond
 
         // Just select one peer per maintain
         DownloadBlocksContainer blockContainer(m_service, m_protocolId, _p->nodeId);
 
-        while (!reqQueue.empty() && utcSteadyTime() <= timeout)
+        while (!reqQueue.empty() && utcSteadyTime() <= timeout)//若没超时   200ms    ？？？sync   将peer的请求队列from size取出
         {
-            DownloadRequest req = reqQueue.topAndPop();
+            DownloadRequest req = reqQueue.topAndPop();//每看懂？？？sync
             int64_t number = req.fromNumber;
             int64_t numberLimit = req.fromNumber + req.size;
             SYNC_LOG(DEBUG) << LOG_BADGE("Download Request: response blocks")
@@ -690,7 +690,7 @@ void SyncMaster::maintainBlockRequest()
                             << LOG_KV("numberLimit", numberLimit)
                             << LOG_KV("peer", _p->nodeId.abridged());
             // Send block at sequence
-            for (; number < numberLimit && utcSteadyTime() <= timeout; number++)
+            for (; number < numberLimit && utcSteadyTime() <= timeout; number++)// 将【from size】区块放入区块容器，满1M则发送||超时200ms发送
             {
                 auto start_get_block_time = utcTime();
                 shared_ptr<bytes> blockRLP = m_blockChain->getBlockRLPByNumber(number);
@@ -725,7 +725,7 @@ void SyncMaster::maintainBlockRequest()
                                << LOG_KV("blockSize", blockRLP->size()) << LOG_KV("number", number)
                                << LOG_KV("peer", _p->nodeId.abridged())
                                << LOG_KV("timeCost", utcTime() - start_get_block_time);
-                blockContainer.batchAndSend(blockRLP);
+                blockContainer.batchAndSend(blockRLP); //积累区块达到 > 1M-2048 or 超过200ms ， 发送给peer
             }
 
             if (number < numberLimit)  // This respond not reach the end due to timeout
