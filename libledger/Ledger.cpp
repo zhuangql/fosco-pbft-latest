@@ -559,7 +559,7 @@ bool Ledger::initSync()
         Ledger_LOG(ERROR) << LOG_BADGE("initLedger") << LOG_DESC("#initSync Failed");
         return false;
     }
-    // raft disable enableSendBlockStatusByTree
+    // raft disable enableSendBlockStatusByTree  ???why
     bool enableSendBlockStatusByTree = m_param->mutableSyncParam().enableSendBlockStatusByTree;
     bool enableSendTxsByTree = m_param->mutableSyncParam().enableSendTxsByTree;
     if (dev::stringCmpIgnoreCase(m_param->mutableConsensusParam().consensusType, "raft") == 0)
@@ -572,7 +572,7 @@ bool Ledger::initSync()
                      << LOG_KV("enableSendBlockStatusByTree", enableSendBlockStatusByTree)
                      << LOG_KV("enableSendTxsByTree", enableSendTxsByTree);
 
-    dev::PROTOCOL_ID protocol_id = getGroupProtoclID(m_groupId, ProtocolID::BlockSync);
+    dev::PROTOCOL_ID protocol_id = getGroupProtoclID(m_groupId, ProtocolID::BlockSync);//前16群組id，后16模块id
     dev::h256 genesisHash = m_blockChain->getBlockByNumber(int64_t(0))->headerHash();
     auto syncMaster = std::make_shared<SyncMaster>(m_service, m_txPool, m_blockChain,
         m_blockVerifier, protocol_id, m_keyPair.pub(), genesisHash,
@@ -580,7 +580,7 @@ bool Ledger::initSync()
         m_param->mutableSyncParam().gossipPeers, enableSendTxsByTree, enableSendBlockStatusByTree,
         m_param->mutableSyncParam().syncTreeWidth);
 
-    // create and setSyncMsgPacketFactory
+    // create and setSyncMsgPacketFactory 同步消息包工厂
     SyncMsgPacketFactory::Ptr syncMsgPacketFactory;
     if (g_BCOSConfig.version() >= V2_6_0)
     {
@@ -595,10 +595,10 @@ bool Ledger::initSync()
     }
     syncMaster->setSyncMsgPacketFactory(syncMsgPacketFactory);
 
-    // set the max block queue size for sync module(bytes)
+    // set the max block queue size for sync module(bytes)  缓存的最大下载队列 512M
     syncMaster->setMaxBlockQueueSize(m_param->mutableSyncParam().maxQueueSizeForBlockSync);
     syncMaster->setTxsStatusGossipMaxPeers(m_param->mutableSyncParam().txsStatusGossipMaxPeers);
-    // set networkBandwidthLimiter
+    // set networkBandwidthLimiter   设置网络带宽限制
     if (m_networkBandwidthLimiter)
     {
         syncMaster->setBandwidthLimiter(m_networkBandwidthLimiter);

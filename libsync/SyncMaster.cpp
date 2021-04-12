@@ -154,7 +154,7 @@ void SyncMaster::doWork()
                 // check and commit the downloaded block
                 if (m_syncStatus->state == SyncState::Downloading)
                 {
-                    bool finished = maintainDownloadingQueue();//commit blocks
+                    bool finished = maintainDownloadingQueue();//落盘 blocks
                     if (finished)
                         noteDownloadingFinish();
                 }
@@ -175,7 +175,7 @@ void SyncMaster::doWork()
     m_sendBlockProcessor->enqueue([this]() {
         try
         {
-            maintainBlockRequest();//回复下载请求，发送区块。每次只给200ms时间发送
+            maintainBlockRequest();//回复下载请求，发送区块。每次只给200ms时间发送  ？？？为啥分配了一个线程处理 时间还这么短
         }
         catch (std::exception const& e)
         {
@@ -561,9 +561,13 @@ bool SyncMaster::maintainDownloadingQueue()
     return false;
 }
 
+//获取可同步的节点（sealer && obserber）
+//1、删除同步列表中的失效节点
+//2、在同步列表中增加 新加入的节点(同时给新节点发送sync status包)
+//3、更新同步表（的节点角色，sealer or observer）
 void SyncMaster::maintainPeersConnection()
 {
-    // Get active peers                                                                                                         从p2p获取链接的有效节点
+    // Get active peers                                                                                                         从p2p获取链接的有效节点activePeers
     auto sessions = m_service->sessionInfosByProtocolID(m_protocolId);
     set<NodeID> activePeers;
     for (auto const& session : sessions)
@@ -575,9 +579,9 @@ void SyncMaster::maintainPeersConnection()
     NodeIDs sealers = m_blockChain->sealerList();
     NodeIDs sealerOrObserver = sealers + m_blockChain->observerList();
 
-    // member set is [(sealer || observer) && activePeer && not myself]    /获取可链接的节点  memberSet表示 sealer+observer中与当前节点有链接的节点集，不包含自己
+    // member set is [(sealer || observer) && activePeer && not myself] 获取可同步的节点  memberSet表示 actiePeers中的sealer+observer节点，不包含自己
     set<NodeID> memberSet;
-    bool hasMyself = false;//本节点时候在共识列表中
+    bool hasMyself = false;//本节点是否在共识列表中
     for (auto const& member : sealerOrObserver)
     {
         /// find active peers
@@ -588,7 +592,7 @@ void SyncMaster::maintainPeersConnection()
         hasMyself |= (member == m_nodeId);
     }
 
-    // Delete uncorrelated peers                                                                                   删除同步节点列表中，与当前节点 没有链接 的节点（没有链接但是区块高度大于自己则不删除）
+    // Delete uncorrelated peers                 删除同步节点列表中的断连节点，与当前node断连 的节点（断连但是区块高度>自己的不删除）
     int64_t currentNumber = m_blockChain->number();
     NodeIDs peersToDelete;
     m_syncStatus->foreachPeer([&](std::shared_ptr<SyncPeerStatus> _p) {
@@ -608,7 +612,7 @@ void SyncMaster::maintainPeersConnection()
 
 
     // Add new peers                                                                                                               在同步列表中添加，
-    h256 const& currentHash = m_blockChain->numberHash(currentNumber);//根据链接  增加新的活跃节点到 同步节点集中
+    h256 const& currentHash = m_blockChain->numberHash(currentNumber);//根据有效链接  增加新的活跃节点到 同步节点集中
     for (auto const& member : memberSet)
     {
         if (member != m_nodeId && !m_syncStatus->hasPeer(member))
@@ -626,7 +630,7 @@ void SyncMaster::maintainPeersConnection()
                 packet->alignedTime = utcTime();
                 packet->encode();
 
-                m_service->asyncSendMessageByNodeID(
+                m_service->asyncSendMessageByNodeID(//异步发送？？？
                     member, packet->toMessage(m_protocolId), CallbackFuncWithSession(), Options());
                 SYNC_LOG(DEBUG) << LOG_BADGE("Status")
                                 << LOG_DESC("Send current status to new peer")
@@ -639,7 +643,7 @@ void SyncMaster::maintainPeersConnection()
         }
     }
 
-    // Update sync sealer status    //更新 同步节点集中的节点 sealer 标识
+    // Update sync sealer status    //更新 同步节点集中的节点 sealer 标识    sealer角色在同步中的作用是什么？
     set<NodeID> sealerSet;
     for (auto sealer : sealers)
         sealerSet.insert(sealer);
@@ -703,7 +707,7 @@ void SyncMaster::maintainBlockRequest()
                         << LOG_KV("nodeId", _p->nodeId.abridged());
                     break;
                 }
-                auto requiredPermits = blockRLP->size() / g_BCOSConfig.c_compressRate;
+                auto requiredPermits = blockRLP->size() / g_BCOSConfig.c_compressRate;//after 2.0.0
                 if (m_nodeBandwidthLimiter && !m_nodeBandwidthLimiter->tryAcquire(requiredPermits))
                 {
                     SYNC_LOG(INFO)

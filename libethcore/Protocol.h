@@ -33,7 +33,7 @@ namespace dev
 {
 typedef int16_t GROUP_ID;
 typedef uint16_t MODULE_ID;
-typedef int32_t PROTOCOL_ID;
+typedef int32_t PROTOCOL_ID; //first  16 bytes  is  groupID      rest 16 bytes is shangceng yingyongceng  de biaozhi
 typedef uint16_t PACKET_TYPE;
 typedef uint16_t VERSION_TYPE;
 static const GROUP_ID maxGroupID = 32767;
@@ -74,7 +74,7 @@ inline PROTOCOL_ID getGroupProtoclID(GROUP_ID groupID, MODULE_ID moduleID)
     {
         return (groupID << 8) | moduleID;
     }
-    return (groupID << (8 * sizeof(MODULE_ID))) | moduleID;
+    return (groupID << (8 * sizeof(MODULE_ID))) | moduleID;//???  16 bytes   ->   32 bytes
 }
 
 inline std::pair<GROUP_ID, MODULE_ID> getGroupAndProtocol(PROTOCOL_ID id)

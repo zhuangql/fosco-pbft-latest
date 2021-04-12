@@ -91,7 +91,7 @@ public:
         m_txPool->registerSyncStatusChecker([this]() {
             try
             {
-                // Refuse transaction if far syncing
+                // Refuse transaction if far syncing    如果当前node的区块高度 小于knownHighist 超过20个区块，则交易池中不接收交易  why？？？
                 if (m_sync->blockNumberFarBehind())
                 {
                     BOOST_THROW_EXCEPTION(

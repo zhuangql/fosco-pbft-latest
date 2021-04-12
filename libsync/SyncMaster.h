@@ -79,7 +79,7 @@ public:
         std::string threadName = "Sync-" + std::to_string(m_groupId);
         setName(threadName);
         // signal registration
-        m_blockSubmitted = m_blockChain->onReady([&](int64_t) { this->noteNewBlocks(); });
+        m_blockSubmitted = m_blockChain->onReady([&](int64_t) { this->noteNewBlocks(); });//after construct function the obj exit
         m_downloadBlockProcessor =
             std::make_shared<dev::ThreadPool>("Download-" + std::to_string(m_groupId), 1);
         m_sendBlockProcessor =
@@ -87,7 +87,7 @@ public:
 
         // syncStatus should be initialized firstly since it should be deconstruct at final
         m_syncStatus =
-            std::make_shared<SyncMasterStatus>(_blockChain, _protocolId, _genesisHash, _nodeId);
+            std::make_shared<SyncMasterStatus>(_blockChain, _protocolId, _genesisHash, _nodeId);//master status
 
         m_txQueue = std::make_shared<DownloadingTxsQueue>(_protocolId, _nodeId);
         m_txQueue->setService(_service);
@@ -114,7 +114,7 @@ public:
             m_blockStatusGossipThread->registerGossipHandler(
                 boost::bind(&SyncMaster::sendBlockStatus, this, _1));
         }
-        m_msgEngine = std::make_shared<SyncMsgEngine>(_service, _txPool, _blockChain, m_syncStatus,
+        m_msgEngine = std::make_shared<SyncMsgEngine>(_service, _txPool, _blockChain, m_syncStatus,//msg engine
             m_txQueue, _protocolId, _nodeId, _genesisHash);
         m_msgEngine->onNotifyWorker([&]() { m_signalled.notify_all(); });
 
@@ -290,7 +290,7 @@ private:
     /// Downloading txs queue
     std::shared_ptr<DownloadingTxsQueue> m_txQueue;
 
-    /// Block queue and peers
+    /// Block queue and peers    区块下载队列  和 同步节点表
     std::shared_ptr<SyncMasterStatus> m_syncStatus;
 
     /// Message handler of p2p
