@@ -83,7 +83,7 @@ public:
     int64_t number;//区块高度
     h256 genesisHash;
     h256 latestHash;
-    DownloadRequestQueue reqQueue;;//用nodeId赋值
+    DownloadRequestQueue reqQueue;;//节点的下载区块req（用nodeId赋值）
     bool isSealer = false;
 };
 

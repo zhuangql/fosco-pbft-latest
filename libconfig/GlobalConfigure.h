@@ -132,8 +132,8 @@ private:
     int64_t m_chainId = 1;
     std::string m_supportedVersion;
     dev::eth::EVMSchedule m_evmSchedule = dev::eth::DefaultSchedule;
-    std::string m_confDir;
-    std::string m_dataDir;
+    std::string m_confDir;//群组的配置文件目录
+    std::string m_dataDir;//群组的data目录
     bool m_enableStat;
     bool m_useSMCrypto;
 };

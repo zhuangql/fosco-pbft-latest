@@ -72,22 +72,22 @@ bool LedgerInitializer::initLedgerByGroupID(dev::GROUP_ID const& _groupId)
 
 vector<dev::GROUP_ID> LedgerInitializer::initLedgers()
 {
-    vector<dev::GROUP_ID> newGroupIDList;
+    vector<dev::GROUP_ID> newGroupIDList;//函数返回值  没用上
     try
     {
         newGroupIDList = foreachLedgerConfigure(m_groupConfigPath, [&](dev::GROUP_ID const&
-                                                                           _groupID,
+                                                                           _groupID,//从.genesis读取的群组id
                                                                        const string&
-                                                                           _configFileName) {
+                                                                           _configFileName) {//每个   .genesis文件的路径名（包括路径和文件名）？？？
             try
             {
-                // skip existing group
+                // skip existing group    账本 ID 是否已存在
                 if (m_ledgerManager->isLedgerExist(_groupID))
                 {
                     return false;
                 }
 
-                if (m_ledgerManager->isLedgerHaltedBefore(_groupID))
+                if (m_ledgerManager->isLedgerHaltedBefore(_groupID))//账本之前是否被暂停？
                 {
                     return false;
                 }
@@ -148,8 +148,8 @@ vector<dev::GROUP_ID> LedgerInitializer::foreachLedgerConfigure(
     if (fs::is_directory(path))
     {
         fs::directory_iterator endIter;
-        for (fs::directory_iterator iter(path); iter != endIter; iter++)
-        {
+        for (fs::directory_iterator iter(path); iter != endIter; iter++)//扫描 群组配置dir中的 所有 .genesis文件，文件个数代表群组个数？
+        {//tert代表什么？？
             if (fs::extension(*iter) == ".genesis")
             {
                 // parse group id
@@ -205,7 +205,7 @@ void LedgerInitializer::reloadSDKAllowList()
 bool LedgerInitializer::initLedger(
     dev::GROUP_ID const& _groupId, std::string const& _dataDir, std::string const& _configFileName)
 {
-    if (m_ledgerManager->isLedgerExist(_groupId))
+    if (m_ledgerManager->isLedgerExist(_groupId))//多此一举了
     {
         // Already initialized
         return true;
@@ -216,7 +216,7 @@ bool LedgerInitializer::initLedger(
     auto ledger = std::make_shared<Ledger>(m_p2pService, _groupId, m_keyPair);
     ledger->setChannelRPCServer(m_channelRPCServer);
     auto ledgerParams = std::make_shared<LedgerParam>();
-    ledgerParams->init(_configFileName, _dataDir);
+    ledgerParams->init(_configFileName, _dataDir);//解析每个群组的配置文件；群组的配置文件目录（可多个群组配置文件，放在一起的）  群组的data目录（可多个群组的data，分开的）
     bool succ = ledger->initLedger(ledgerParams);
     if (!succ)
     {

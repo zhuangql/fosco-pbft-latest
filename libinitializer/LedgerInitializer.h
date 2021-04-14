@@ -86,8 +86,8 @@ private:
     std::shared_ptr<dev::p2p::P2PInterface> m_p2pService;
     ChannelRPCServer::Ptr m_channelRPCServer;
     KeyPair m_keyPair;
-    std::string m_groupDataDir;
-    std::string m_groupConfigPath;
+    std::string m_groupDataDir;//群组的data目录
+    std::string m_groupConfigPath;//群组的配置文件目录
 };
 
 }  // namespace initializer

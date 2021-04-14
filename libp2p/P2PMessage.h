@@ -108,7 +108,7 @@ protected:
     uint32_t m_seq = 0;               ///< the message identify
     std::shared_ptr<bytes> m_buffer;  ///< message data 消息数据
     bool m_dirty = true;
-    bool m_permitsAcquired = false;
+    bool m_permitsAcquired = false;//？？？？？干嘛的  sync respond blocks 发现的
 };
 enum AMOPPacketType
 {

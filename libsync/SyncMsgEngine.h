@@ -170,8 +170,8 @@ private:
     PROTOCOL_ID m_protocolId;
     GROUP_ID m_groupId;
     NodeID m_nodeId;
-    std::vector<dev::bytes> m_blockRLPsBatch;
-    size_t m_currentBatchSize = 0;
+    std::vector<dev::bytes> m_blockRLPsBatch;//要发送的blocks
+    size_t m_currentBatchSize = 0;//容器中的blocks 大小
 };
 
 }  // namespace sync

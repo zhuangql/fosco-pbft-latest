@@ -32,13 +32,13 @@ void Initializer::init(std::string const& _path)
 {
     try
     {
-        boost::property_tree::ptree pt;
+        boost::property_tree::ptree pt; //pt  节点配置文件
         boost::property_tree::read_ini(_path, pt);
 
         /// init log
         m_logInitializer = std::make_shared<LogInitializer>();
         m_logInitializer->initLog(pt);
-        /// init global config. must init before DB, for compatibility
+        /// init global config. must init before DB, for compatibility    读取节点配置文件
         initGlobalConfig(pt);
 
         // init the statLog

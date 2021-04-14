@@ -36,7 +36,7 @@ void SyncMsgEngine::messageHandler(
 {
     try
     {
-        if (!checkSession(_session) || !checkMessage(_msg))
+        if (!checkSession(_session) || !checkMessage(_msg))//session检查什么？  消息查什么？
         {
             SYNC_ENGINE_LOG(WARNING)
                 << LOG_BADGE("Rcv") << LOG_BADGE("Packet")
@@ -45,7 +45,7 @@ void SyncMsgEngine::messageHandler(
         }
 
         SyncMsgPacket::Ptr packet = std::make_shared<SyncMsgPacket>();
-        if (!packet->decode(_session, _msg))
+        if (!packet->decode(_session, _msg))//解码
         {
             SYNC_ENGINE_LOG(WARNING)
                 << LOG_BADGE("Rcv") << LOG_BADGE("Packet") << LOG_DESC("Reject packet")
@@ -56,7 +56,7 @@ void SyncMsgEngine::messageHandler(
             return;
         }
 
-        bool ok = interpret(packet, _msg, _session->nodeID());
+        bool ok = interpret(packet, _msg, _session->nodeID());//解析
         if (!ok)
             SYNC_ENGINE_LOG(WARNING)
                 << LOG_BADGE("Rcv") << LOG_BADGE("Packet") << LOG_DESC("Reject packet")
@@ -106,7 +106,7 @@ bool SyncMsgEngine::interpret(
         auto self = std::weak_ptr<SyncMsgEngine>(shared_from_this());
         switch (_packet->packetType)
         {
-        case StatusPacket:
+        case StatusPacket://区块status包
             onPeerStatus(*_packet);
             break;
         case TransactionsPacket:
@@ -118,10 +118,10 @@ bool SyncMsgEngine::interpret(
                 }
             });
             break;
-        case BlocksPacket:
+        case BlocksPacket://收到了blocks
             onPeerBlocks(*_packet);
             break;
-        case ReqBlocskPacket:
+        case ReqBlocskPacket://请求区块包
             onPeerRequestBlocks(*_packet);
             break;
         // receive transaction hash, _msg is only used to ensure the life-time for rlps of _packet
@@ -159,7 +159,7 @@ bool SyncMsgEngine::interpret(
 
 void SyncMsgEngine::onPeerStatus(SyncMsgPacket const& _packet)
 {
-    shared_ptr<SyncPeerStatus> status = m_syncStatus->peerStatus(_packet.nodeId);
+    shared_ptr<SyncPeerStatus> status = m_syncStatus->peerStatus(_packet.nodeId);//查找同步表中的node status
     // Note: m_syncMsgPacketFactory may be initialized behind SyncMsgEngine,
     //       so here must judge whether m_syncMsgPacketFactory is nullptr
     if (!m_syncMsgPacketFactory)
@@ -170,9 +170,9 @@ void SyncMsgEngine::onPeerStatus(SyncMsgPacket const& _packet)
     RLP const& rlps = _packet.rlp();
 
     SyncStatusPacket::Ptr info = m_syncMsgPacketFactory->createSyncStatusPacket();
-    info->decodePacket(rlps, _packet.nodeId);
+    info->decodePacket(rlps, _packet.nodeId);//解码 sync status 包
 
-    if (info->genesisHash != m_genesisHash)
+    if (info->genesisHash != m_genesisHash)//检查
     {
         SYNC_ENGINE_LOG(WARNING) << LOG_BADGE("Status")
                                  << LOG_DESC(
@@ -183,11 +183,11 @@ void SyncMsgEngine::onPeerStatus(SyncMsgPacket const& _packet)
     }
 
     int64_t currentNumber = m_blockChain->number();
-    if (status == nullptr)
+    if (status == nullptr)//同步表中没有此node status，插入
     {
-        if (currentNumber < info->number)
+        if (currentNumber < info->number)//判断有效
         {
-            m_syncStatus->newSyncPeerStatus(info);
+            m_syncStatus->newSyncPeerStatus(info);//同步表中插入一个peer status
         }
         SYNC_ENGINE_LOG(DEBUG) << LOG_BADGE("Status")
                                << LOG_DESC("Receive status from unknown peer")
@@ -207,13 +207,13 @@ void SyncMsgEngine::onPeerStatus(SyncMsgPacket const& _packet)
                                << LOG_KV("genesisHash", info->genesisHash.abridged())
                                << LOG_KV("latestHash", info->latestHash.abridged())
                                << LOG_KV("peerTime", info->alignedTime);
-        status->update(info);
+        status->update(info);//同步表中存在 则更新
     }
-    if (currentNumber < info->number && m_onNotifyWorker)
+    if (currentNumber < info->number && m_onNotifyWorker)//优化  自己落后  notify   syncMaster线程工作
     {
         m_onNotifyWorker();
     }
-    // align time
+    // align time                                 干嘛的？？？
     if (m_nodeTimeMaintenance)
     {
         auto self = std::weak_ptr<SyncMsgEngine>(shared_from_this());
@@ -266,7 +266,7 @@ void SyncMsgEngine::onPeerBlocks(SyncMsgPacket const& _packet)
                            << LOG_DESC("Receive peer block packet")
                            << LOG_KV("packetSize(B)", rlps.data().size());
 
-    m_syncStatus->bq().push(rlps);
+    m_syncStatus->bq().push(rlps);//插入 本节点的  下载queue
     // notify sync master to solve DownloadingQueue
     if (m_onNotifyWorker)
     {
@@ -276,7 +276,7 @@ void SyncMsgEngine::onPeerBlocks(SyncMsgPacket const& _packet)
 
 void SyncMsgEngine::onPeerRequestBlocks(SyncMsgPacket const& _packet)
 {
-    if (!checkGroupPacket(_packet))
+    if (!checkGroupPacket(_packet))//检查同步表中 有无此 node
     {
         SYNC_ENGINE_LOG(WARNING) << LOG_BADGE("Download") << LOG_BADGE("Request")
                                  << LOG_DESC("Drop unknown peer blocks request")
@@ -286,7 +286,7 @@ void SyncMsgEngine::onPeerRequestBlocks(SyncMsgPacket const& _packet)
 
     RLP const& rlp = _packet.rlp();
 
-    if (rlp.itemCount() != 2)
+    if (rlp.itemCount() != 2)//？？？格式
     {
         SYNC_ENGINE_LOG(WARNING) << LOG_BADGE("Download") << LOG_BADGE("Request")
                                  << LOG_DESC("Receive invalid request blocks packet format")
@@ -306,8 +306,8 @@ void SyncMsgEngine::onPeerRequestBlocks(SyncMsgPacket const& _packet)
     auto peerStatus = m_syncStatus->peerStatus(_packet.nodeId);
     if (peerStatus != nullptr && peerStatus)
     {
-        peerStatus->reqQueue.push(from, (int64_t)size);
-        // notify sync master to handle block requests
+        peerStatus->reqQueue.push(from, (int64_t)size);//将reqBlocks包 插入 同步表中peer的请求包队列
+        // notify sync master to handle block requests  优化
         if (m_onNotifyWorker)
         {
             m_onNotifyWorker();
@@ -328,14 +328,14 @@ void DownloadBlocksContainer::batchAndSend(std::shared_ptr<dev::bytes> _blockRLP
     // TODO: thread safe
     bytes& blockRLP = *_blockRLP;
 
-    if (blockRLP.size() > c_maxPayload)
+    if (blockRLP.size() > c_maxPayload)//区块本身达到1M，直接发 （一种可能：前面在积累，后面的大于1M直接发，此时超时，只发了后面的区块，前面的怎么处理？）
     {
         sendBigBlock(blockRLP);
         return;
     }
 
     // Clear and send batch if full
-    if (m_currentBatchSize + blockRLP.size() > c_maxPayload)
+    if (m_currentBatchSize + blockRLP.size() > c_maxPayload)//否则积累到1M在发，发完清理容器
         clearBatchAndSend();
 
     // emplace back block in batch

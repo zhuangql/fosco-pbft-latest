@@ -71,7 +71,7 @@ bool SyncMsgPacket::checkPacket(bytesConstRef _msg)
 
 RLPStream& SyncMsgPacket::prep(RLPStream& _s, unsigned _id, unsigned _args)
 {
-    return _s.appendRaw(bytes(1, _id + c_syncPacketIDBase)).appendList(_args);
+    return _s.appendRaw(bytes(1, _id + c_syncPacketIDBase)).appendList(_args);//？？？rlp要看一下
 }
 
 void SyncStatusPacket::encode()

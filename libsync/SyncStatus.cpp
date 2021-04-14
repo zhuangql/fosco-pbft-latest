@@ -154,7 +154,7 @@ void SyncMasterStatus::foreachPeerRandom(
     if (m_peersStatus.empty())
         return;
 
-    // Get nodeid list
+    // Get nodeid list                                                      同步表中的all nodeos
     NodeIDs nodeIds;
     for (auto& peer : m_peersStatus)
         nodeIds.emplace_back(peer.first);

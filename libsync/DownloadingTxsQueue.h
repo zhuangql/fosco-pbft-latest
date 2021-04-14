@@ -47,7 +47,7 @@ public:
 
     void appendKnownNode(dev::h512 const& _knownNode) { knownNodes->push_back(_knownNode); }
     bytes txsBytes;
-    NodeID fromPeer;
+    NodeID fromPeer;//表示什么？
     std::shared_ptr<dev::h512s> knownNodes;
 };
 

@@ -235,7 +235,7 @@ private:
     }
 
 protected:
-    std::shared_ptr<LedgerParamInterface> m_param = nullptr;
+    std::shared_ptr<LedgerParamInterface> m_param = nullptr;//账本的配置文件参数 包括.genesis 和 .ini
 
     std::shared_ptr<dev::p2p::P2PInterface> m_service = nullptr;
     dev::GROUP_ID m_groupId;

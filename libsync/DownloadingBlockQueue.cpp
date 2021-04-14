@@ -157,18 +157,18 @@ void DownloadingBlockQueue::clearQueue()
     std::priority_queue<BlockPtr, BlockPtrVec, BlockQueueCmp> emptyQueue;
     swap(m_blocks, emptyQueue);  // Does memory leak here ?
     // give back the memory to os
-    MallocExtension::instance()->ReleaseFreeMemory();
+    MallocExtension::instance()->ReleaseFreeMemory();   //干嘛的？
 }
 
 void DownloadingBlockQueue::flushBufferToQueue()
 {
     WriteGuard l(x_buffer);
-    bool ret = true;
-    while (m_buffer->size() > 0 && ret) //对 每一个 区块区间 缓存 操作
+    bool ret = true;//buffer->blocks成功or失败  基本succeed
+    while (m_buffer->size() > 0 && ret) //对p2p buffer的 每一个 shard [from, size]  转成blocks
     {
         auto blocksShard = m_buffer->front();
         m_buffer->pop_front();
-        ret = flushOneShard(blocksShard);
+        ret = flushOneShard(blocksShard);//shard buffer -> queue
     }
 }
 
@@ -177,7 +177,7 @@ bool DownloadingBlockQueue::flushOneShard(ShardPtr _blocksShard)
     // pop buffer into queue
     WriteGuard l(x_blocks);
     if (m_blocks.size() >= c_maxDownloadingBlockQueueSize)  // TODO not to use size to
-                                                            // control insert
+                                                            // control insert    区块下载队列 满了(超过4*32 * 2)
     {
         SYNC_LOG(TRACE) << LOG_BADGE("Download") << LOG_BADGE("BlockSync")
                         << LOG_DESC("DownloadingBlockQueueBuffer is full")
@@ -191,20 +191,20 @@ bool DownloadingBlockQueue::flushOneShard(ShardPtr _blocksShard)
                     << LOG_KV("blocksShardSize", _blocksShard->blocksBytes.size());
 
 
-    RLP const& rlps = RLP(ref(_blocksShard->blocksBytes));  //将缓存解码
-    unsigned itemCount = rlps.itemCount();
+    RLP const& rlps = RLP(ref(_blocksShard->blocksBytes));
+    unsigned itemCount = rlps.itemCount();//区块数吧？
     size_t successCnt = 0;
-    for (unsigned i = 0; i < itemCount; ++i)//还原为 多个区块
+    for (unsigned i = 0; i < itemCount; ++i)//[from,size]的rlp->多个区块
     {
         try
         {
             shared_ptr<Block> block =
                 make_shared<Block>(rlps[i].toBytes(), CheckTransaction::Everything, false);
-            if (isNewerBlock(block))//判断区块时候是新的
+            if (isNewerBlock(block))//node有没有此block，则push到队列；否则丢弃
             {
                 successCnt++;
                 m_blocks.push(block);
-                //next content  is nothing in 2.0.0
+                //next content  is nothing in 2.0.0     ？？？what's mean
                 // Note: the memory size occupied by Block object will increase to at least treble
                 // for:
                 // 1. txsCache of Block
@@ -235,11 +235,11 @@ bool DownloadingBlockQueue::flushOneShard(ShardPtr _blocksShard)
 }
 
 void DownloadingBlockQueue::clearFullQueueIfNotHas(int64_t _blockNumber)
-{
+{//容错用的
     bool needClear = false;
     {
         ReadGuard l(x_blocks);
-        //下载队列如果满了，并且队头区块高度 大于 m_blockChain->number() + 1，清空
+        //容错(下载队列如果满了，并且队头区块高度 大于 m_blockChain->number() + 1，清空)
         if (m_blocks.size() == c_maxDownloadingBlockQueueSize &&
             m_blocks.top()->header().number() > _blockNumber)
             needClear = true;

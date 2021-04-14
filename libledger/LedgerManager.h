@@ -87,7 +87,7 @@ public:
     bool isLedgerHaltedBefore(dev::GROUP_ID const& _groupID)
     {
         RecursiveGuard l(x_ledgerManager);
-        auto status = queryGroupStatus(_groupID);
+        auto status = queryGroupStatus(_groupID);//没看懂
         // if a group was marked as `STOPPED` or `DELETED`, it was halted before
         if (status == LedgerStatus::STOPPED || status == LedgerStatus::DELETED)
         {
@@ -252,7 +252,7 @@ private:
     /// cache for the group List
     std::set<dev::GROUP_ID> m_groupListCache;
 
-    /// map used to store the mappings between groupId and created ledger objects
+    /// map used to store the mappings between groupId and created ledger objects  创建的group id 和 对象
     std::map<dev::GROUP_ID, std::shared_ptr<LedgerInterface>> m_ledgerMap;
 };
 }  // namespace ledger

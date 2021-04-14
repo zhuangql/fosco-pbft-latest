@@ -144,8 +144,8 @@ void LedgerParam::generateGenesisMark()
 void LedgerParam::parseIniConfig(const std::string& _iniConfigFile, const std::string& _dataPath)
 {
     m_iniConfigPath = _iniConfigFile;
-    std::string prefix = _dataPath + "/group" + std::to_string(m_groupID);
-    if (_dataPath == "")
+    std::string prefix = _dataPath + "/group" + std::to_string(m_groupID);//prefix表示群组data的保存路径 （每个群组的data分开文件夹存放）
+    if (_dataPath == "")//若主config文件的 group_data_path为空，则data存在当前目录下
     {
         prefix = "./group" + std::to_string(m_groupID);
     }
@@ -170,17 +170,17 @@ void LedgerParam::parseIniConfig(const std::string& _iniConfigFile, const std::s
     parseSDKAllowList(m_permissionParam.sdkAllowList, pt);
 }
 
-void LedgerParam::init(const std::string& _configFilePath, const std::string& _dataPath)
+void LedgerParam::init(const std::string& _configFilePath, const std::string& _dataPath)////群组的.genesis配置文件目录  群组的data目录
 {
     /// The file group.X.genesis is required, otherwise the program terminates.
-    /// load genesis config of group
+    /// load genesis config of group  加载群组的 .genesis配置文件
 
-    parseGenesisConfig(_configFilePath);
-    // The file group.X.ini is available by default.
+    parseGenesisConfig(_configFilePath);//解析 .genesis 配置
+    // The file group.X.ini is available by default. 群组可变配置文件 默认存在
     std::string iniConfigFileName = _configFilePath;
     boost::replace_last(iniConfigFileName, "genesis", "ini");
 
-    parseIniConfig(iniConfigFileName, _dataPath);
+    parseIniConfig(iniConfigFileName, _dataPath);//解析群组可变配置文件  给group的账本定义存储data的路径
 }
 
 void LedgerParam::initTxExecuteConfig(ptree const& pt)

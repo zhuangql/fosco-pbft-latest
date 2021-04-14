@@ -32,7 +32,7 @@ namespace dev
 {
 namespace sync
 {
-class SyncMsgPacket
+class SyncMsgPacket//
 {
 public:
     using Ptr = std::shared_ptr<SyncMsgPacket>;
@@ -70,15 +70,15 @@ public:
     NodeID nodeId;
 
 protected:
-    RLP m_rlp;              /// The result of decode
-    RLPStream m_rlpStream;  // The result of encode
+    RLP m_rlp;              /// The result of decode   从p2p接收的放这里
+    RLPStream m_rlpStream;  // The result of encode    要发出去的放这里
     std::shared_ptr<dev::p2p::P2PMessageFactory> m_p2pFactory;
 
 private:
     bool checkPacket(bytesConstRef _msg);
 };
 
-class SyncStatusPacket : public SyncMsgPacket
+class SyncStatusPacket : public SyncMsgPacket//
 {
 public:
     using Ptr = std::shared_ptr<SyncStatusPacket>;
@@ -98,7 +98,7 @@ public:
     int64_t number;//区块高度
     h256 genesisHash;
     h256 latestHash;
-    int64_t alignedTime;
+    int64_t alignedTime;//生产时间
 
 protected:
     unsigned m_itemCount = 3;

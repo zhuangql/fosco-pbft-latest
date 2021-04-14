@@ -238,7 +238,7 @@ private:
     SyncParam m_syncParam;
     GenesisParam m_genesisParam;
     AMDBParam m_amdbParam;
-    std::string m_baseDir;
+    std::string m_baseDir;//群组data的保存路径  （形式为  .../group1/数据）
     StorageParam m_storageParam;
     StateParam m_stateParam;
     TxParam m_txParam;

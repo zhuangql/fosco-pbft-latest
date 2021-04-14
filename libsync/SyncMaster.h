@@ -80,12 +80,12 @@ public:
         setName(threadName);
         // signal registration
         m_blockSubmitted = m_blockChain->onReady([&](int64_t) { this->noteNewBlocks(); });//after construct function the obj exit
-        m_downloadBlockProcessor =
+        m_downloadBlockProcessor =//
             std::make_shared<dev::ThreadPool>("Download-" + std::to_string(m_groupId), 1);
-        m_sendBlockProcessor =
+        m_sendBlockProcessor =//
             std::make_shared<dev::ThreadPool>("SyncSend-" + std::to_string(m_groupId), 1);
 
-        // syncStatus should be initialized firstly since it should be deconstruct at final
+        // syncStatus should be initialized firstly since it should be deconstruct at final   要看一下？？？
         m_syncStatus =
             std::make_shared<SyncMasterStatus>(_blockChain, _protocolId, _genesisHash, _nodeId);//master status
 
@@ -101,7 +101,7 @@ public:
             SYNC_LOG(DEBUG) << LOG_DESC("enableSendTxsByTree");
         }
 
-        if (m_enableSendBlockStatusByTree)
+        if (m_enableSendBlockStatusByTree)//false
         {
             m_syncTreeRouter = std::make_shared<SyncTreeTopology>(_nodeId, _syncTreeWidth);
             SYNC_LOG(DEBUG) << LOG_DESC("enableSendBlockStatusByTree");
@@ -114,7 +114,7 @@ public:
             m_blockStatusGossipThread->registerGossipHandler(
                 boost::bind(&SyncMaster::sendBlockStatus, this, _1));
         }
-        m_msgEngine = std::make_shared<SyncMsgEngine>(_service, _txPool, _blockChain, m_syncStatus,//msg engine
+        m_msgEngine = std::make_shared<SyncMsgEngine>(_service, _txPool, _blockChain, m_syncStatus,//msg engine  和 syncMaster共用一个同步表
             m_txQueue, _protocolId, _nodeId, _genesisHash);
         m_msgEngine->onNotifyWorker([&]() { m_signalled.notify_all(); });
 
@@ -293,7 +293,7 @@ private:
     /// Block queue and peers    区块下载队列  和 同步节点表
     std::shared_ptr<SyncMasterStatus> m_syncStatus;
 
-    /// Message handler of p2p
+    /// Message handler of p2p              接收p2p消息
     std::shared_ptr<SyncMsgEngine> m_msgEngine;
 
     dev::ThreadPool::Ptr m_downloadBlockProcessor = nullptr;
@@ -307,9 +307,9 @@ private:
     bool m_enableSendTxsByTree;
     bool m_enableSendBlockStatusByTree;
 
-    int64_t m_maxRequestNumber = 0;
-    uint64_t m_lastDownloadingRequestTime = 0;//上一次的下载请求时间
-    int64_t m_lastDownloadingBlockNumber = 0;
+    int64_t m_maxRequestNumber = 0;//上一轮start downloading 发出的最大区块req号
+    uint64_t m_lastDownloadingRequestTime = 0;//上一次发送下载请求时  的时间
+    int64_t m_lastDownloadingBlockNumber = 0;//上一次发送下载请求时   的最高区块号
     int64_t m_currentSealingNumber = 0;
     int64_t m_eachBlockDownloadingRequestTimeout = 1000;
 
@@ -323,9 +323,9 @@ private:
     boost::condition_variable m_signalled;
 
     // sync state
-    std::atomic_bool m_newBlocks = {false};
+    std::atomic_bool m_newBlocks = {false};//有新区块上链为1
     uint64_t m_maintainBlocksTimeout = 0;
-    bool m_needSendStatus = true;
+    bool m_needSendStatus = true;//本node是群组成员 值为1
     bool m_isGroupMember = false;
 
     // sync transactions
