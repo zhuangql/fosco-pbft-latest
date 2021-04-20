@@ -653,14 +653,14 @@ std::shared_ptr<Transactions> TxPool::topTransactionsCondition(
     // size_t ignoreCount = 0;
     uint64_t limit = min(m_limit, _limit);
     {
-        uint64_t txCnt = 0;
-        for (auto it = m_txsQueue.begin(); txCnt < limit && it != m_txsQueue.end(); it++)
+        uint64_t txCnt = 0;//计数取出了多少 需要同步的tx
+        for (auto it = m_txsQueue.begin(); txCnt < limit && it != m_txsQueue.end(); it++)//取出1000个 || 交易池不满1000则全部取出
         {
-            if (!(*it)->synced())
+            if (!(*it)->synced())//tx 没有被sync过
             {
-                ret->push_back(*it);
+                ret->push_back(*it);//积累vec
                 txCnt++;
-                (*it)->setSynced(true);
+                (*it)->setSynced(true);//标记tx 已 sync
             }
         }
     }
@@ -807,13 +807,13 @@ void TxPool::freshTxsStatus()
         UpgradeGuard ul(l);
         for (auto const& tx : m_txsQueue)
         {
-            tx->setSynced(false);
-            tx->clearNodeTransactionMarker();
+            tx->setSynced(false);//是否交易已经被同步
+            tx->clearNodeTransactionMarker();//clear交易中的  包含本交易的节点list
         }
     }
     {
         WriteGuard l(x_txsHashFilter);
-        m_txsHashFilter->clear();
+        m_txsHashFilter->clear();//？
     }
 }
 

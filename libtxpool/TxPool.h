@@ -246,7 +246,7 @@ private:
     TransactionQueue m_txsQueue;
     std::unordered_map<h256, TransactionQueue::iterator> m_txsHash;
     mutable SharedMutex x_txsHashFilter;
-    std::shared_ptr<std::set<h256>> m_txsHashFilter;
+    std::shared_ptr<std::set<h256>> m_txsHashFilter;//txPool的交易hash   用于检查交易池中是否有此交易
     /// hash of dropped transactions
     h256Hash m_dropped;
 

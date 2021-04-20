@@ -125,7 +125,7 @@ protected:
     std::shared_ptr<dev::txpool::TxPoolInterface> m_txPool;
     std::shared_ptr<dev::blockchain::BlockChainInterface> m_blockChain;
     std::shared_ptr<SyncMasterStatus> m_syncStatus;
-    std::shared_ptr<DownloadingTxsQueue> m_txQueue;
+    std::shared_ptr<DownloadingTxsQueue> m_txQueue;//下载的tx queue
 
     // Internal data
     PROTOCOL_ID m_protocolId;

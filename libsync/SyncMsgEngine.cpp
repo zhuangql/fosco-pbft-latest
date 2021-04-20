@@ -56,7 +56,7 @@ void SyncMsgEngine::messageHandler(
             return;
         }
 
-        bool ok = interpret(packet, _msg, _session->nodeID());//解析
+        bool ok = interpret(packet, _msg, _session->nodeID());//解析（同步包，p2p包，nodeID）
         if (!ok)
             SYNC_ENGINE_LOG(WARNING)
                 << LOG_BADGE("Rcv") << LOG_BADGE("Packet") << LOG_DESC("Reject packet")
@@ -110,11 +110,11 @@ bool SyncMsgEngine::interpret(
             onPeerStatus(*_packet);
             break;
         case TransactionsPacket:
-            m_txsReceiver->enqueue([self, _packet, _msg]() {
+            m_txsReceiver->enqueue([self, _packet, _msg]() {//
                 auto msgEngine = self.lock();
                 if (msgEngine)
                 {
-                    msgEngine->onPeerTransactions(_packet, _msg);
+                    msgEngine->onPeerTransactions(_packet, _msg);//txs -> tx queue
                 }
             });
             break;
@@ -124,9 +124,9 @@ bool SyncMsgEngine::interpret(
         case ReqBlocskPacket://请求区块包
             onPeerRequestBlocks(*_packet);
             break;
-        // receive transaction hash, _msg is only used to ensure the life-time for rlps of _packet
+        // receive transaction hash, _msg is only used to ensure the life-time for rlps of _packet  ？？？？？？
         case TxsStatusPacket:
-            m_txsWorker->enqueue([self, _packet, _peer, _msg]() {
+            m_txsWorker->enqueue([self, _packet, _peer, _msg]() {//（msgEngine实例，sync包，发送者nodeID，p2p包）
                 auto msgEngine = self.lock();
                 if (msgEngine)
                 {
@@ -239,13 +239,13 @@ void SyncMsgEngine::onPeerTransactions(SyncMsgPacket::Ptr _packet, dev::p2p::P2P
     try
     {
         // Note: checkGroupPacket degrade the speed of receiving transactions
-        if (!checkGroupPacket(*_packet))
+        if (!checkGroupPacket(*_packet))//检查txs msg是否来自同步表中node
         {
             SYNC_ENGINE_LOG(DEBUG) << LOG_BADGE("Tx") << LOG_DESC("Drop unknown peer transactions")
                                    << LOG_KV("fromNodeId", _packet->nodeId.abridged());
             return;
         }
-        m_txQueue->push(_packet, _msg, _packet->nodeId);
+        m_txQueue->push(_packet, _msg, _packet->nodeId);//txs  入tx队列
         if (m_onNotifySyncTrans)
         {
             m_onNotifySyncTrans();
@@ -377,7 +377,9 @@ void DownloadBlocksContainer::sendBigBlock(bytes const& _blockRLP)
                           << LOG_KV("blocks", 1) << LOG_KV("bytes(B)", msg->buffer()->size());
 }
 
-// the last param (_msg) is necessary to ensure the life-time of _packet->rlp()
+// the last param (_msg) is necessary to ensure the life-time of _packet->rlp()   ？？？
+//1、保证tx queue为空，tx都在txPool
+//2、根据txs status找到 txPool没有的tx，发tx req
 void SyncMsgEngine::onPeerTxsStatus(
     std::shared_ptr<SyncMsgPacket> _packet, dev::h512 const& _peer, dev::p2p::P2PMessage::Ptr)
 {
@@ -385,14 +387,14 @@ void SyncMsgEngine::onPeerTxsStatus(
     {
         RLP const& rlps = _packet->rlp();
         std::set<dev::h256> txsHash = rlps[1].toSet<dev::h256>();
-        // pop all downloaded txs into the txPool
+        // pop all downloaded txs into the txPool     保证tx都在交易池里
         while (m_txQueue->bufferSize() > 0)
         {
             m_txQueue->pop2TxPool(m_txPool);
         }
         auto blockNumber = m_blockChain->number();
-        // request transaction to the peer
-        auto requestTxs = m_txPool->filterUnknownTxs(txsHash, _peer);
+        // request transaction to the peer    返回没有的txs
+        auto requestTxs = m_txPool->filterUnknownTxs(txsHash, _peer);//（发送者发的txs，发送者ID）
         if (requestTxs->size() == 0)
         {
             return;
@@ -425,7 +427,7 @@ void SyncMsgEngine::onReceiveTxsRequest(
     {
         RLP const& rlps = _txsReqPacket->rlp();
         std::vector<dev::h256> reqTxs = rlps[0].toVector<dev::h256>();
-        auto txs = m_txPool->obtainTransactions(reqTxs);
+        auto txs = m_txPool->obtainTransactions(reqTxs);//从txPopol获取req的交易
         if (0 == txs->size())
         {
             return;
@@ -437,7 +439,7 @@ void SyncMsgEngine::onReceiveTxsRequest(
             tx->appendNodeContainsTransaction(_peer);
         }
         std::shared_ptr<SyncTransactionsPacket> txsPacket =
-            std::make_shared<SyncTransactionsPacket>();
+            std::make_shared<SyncTransactionsPacket>();//回复tx包
         txsPacket->encode(*txRLPs);
         auto p2pMsg = txsPacket->toMessage(m_protocolId);
         m_service->asyncSendMessageByNodeID(_peer, p2pMsg, CallbackFuncWithSession(), Options());

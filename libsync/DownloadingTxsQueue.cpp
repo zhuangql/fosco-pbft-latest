@@ -33,7 +33,7 @@ void DownloadingTxsQueue::push(
     std::shared_ptr<DownloadTxsShard> txsShard =
         std::make_shared<DownloadTxsShard>(_packet->rlp().data(), _fromPeer);
     int RPCPacketType = 1;
-    if (_msg->packetType() == RPCPacketType && m_treeRouter)
+    if (_msg->packetType() == RPCPacketType && m_treeRouter)//false      rpc包类型？不是应该发到交易池吗
     {
         int64_t consIndex = _packet->rlp()[1].toPositiveInt64();
         SYNC_LOG(DEBUG) << LOG_DESC("receive and send transactions by tree")
@@ -61,10 +61,11 @@ void DownloadingTxsQueue::push(
         }
     }
     WriteGuard l(x_buffer);
-    m_buffer->emplace_back(txsShard);
+    m_buffer->emplace_back(txsShard);//入tx vec
 }
 
-
+//1、验证tx：txPool是否存在/签名正确
+//2、
 void DownloadingTxsQueue::pop2TxPool(
     std::shared_ptr<dev::txpool::TxPoolInterface> _txPool, dev::eth::CheckTransaction _checkSig)
 {
@@ -74,24 +75,24 @@ void DownloadingTxsQueue::pop2TxPool(
     int64_t newBuffer_time_cost = 0;
     auto isBufferFull_time_cost = utcTime() - record_time;
     record_time = utcTime();
-    // fetch from buffer(only one thread can callback this function)
+    // fetch from buffer(only one thread can callback this function)  为啥？？？
     std::shared_ptr<std::vector<std::shared_ptr<DownloadTxsShard>>> localBuffer;
     {
-        Guard ml(m_mutex);
+        Guard ml(m_mutex);//忘了，需要看下
         UpgradableGuard l(x_buffer);
-        if (m_buffer->size() == 0)
+        if (m_buffer->size() == 0)//tx queue空
         {
             return;
         }
-        localBuffer = m_buffer;
+        localBuffer = m_buffer;//tx queue提取
         moveBuffer_time_cost = utcTime() - record_time;
         record_time = utcTime();
-        UpgradeGuard ul(l);
-        m_buffer = std::make_shared<std::vector<std::shared_ptr<DownloadTxsShard>>>();
+        UpgradeGuard ul(l);//？
+        m_buffer = std::make_shared<std::vector<std::shared_ptr<DownloadTxsShard>>>();//tx queue清空
         newBuffer_time_cost = utcTime() - record_time;
     }
     // the node is not the group member, return without submit the transaction to the txPool
-    if (!m_needImportToTxPool)
+    if (!m_needImportToTxPool)//节点不在群组，不需要导入txPool
     {
         SYNC_LOG(DEBUG) << LOG_DESC("stop pop2TxPool for the node is not belong to the group")
                         << LOG_KV("pendingTxsSize", _txPool->pendingSize())
@@ -102,11 +103,11 @@ void DownloadingTxsQueue::pop2TxPool(
     int64_t decode_time_cost = 0;
     int64_t verifySig_time_cost = 0;
     int64_t import_time_cost = 0;
-    size_t successCnt = 0;
-    for (size_t i = 0; i < localBuffer->size(); ++i)
+    size_t successCnt = 0;//log
+    for (size_t i = 0; i < localBuffer->size(); ++i)//收到的每个txs shard
     {
         record_time = utcTime();
-        // decode
+        // decode   解码txs
         auto txs = std::make_shared<dev::eth::Transactions>();
         std::shared_ptr<DownloadTxsShard> txsShard = (*localBuffer)[i];
         // TODO drop by Txs Shard
@@ -114,7 +115,7 @@ void DownloadingTxsQueue::pop2TxPool(
         {
             RLP const& txsBytesRLP = RLP(ref(txsShard->txsBytes))[0];
             dev::eth::TxsParallelParser::decode(
-                txs, txsBytesRLP.toBytesConstRef(), _checkSig, true);
+                txs, txsBytesRLP.toBytesConstRef(), _checkSig, true);//解码txs
         }
         else
         {
@@ -130,7 +131,7 @@ void DownloadingTxsQueue::pop2TxPool(
         decode_time_cost += (utcTime() - record_time);
         record_time = utcTime();
 
-        // parallel verify transaction before import
+        // parallel verify transaction before import   验证tx
         tbb::parallel_for(
             tbb::blocked_range<size_t>(0, txs->size()), [&](const tbb::blocked_range<size_t>& _r) {
                 for (size_t j = _r.begin(); j != _r.end(); ++j)
@@ -144,18 +145,18 @@ void DownloadingTxsQueue::pop2TxPool(
         // import into tx pool
         record_time = utcTime();
         NodeID fromPeer = txsShard->fromPeer;
-        for (auto tx : *txs)
+        for (auto tx : *txs)//某个node发的 txs
         {
             try
             {
                 auto importResult = _txPool->import(tx);
-                if (dev::eth::ImportResult::Success == importResult)
+                if (dev::eth::ImportResult::Success == importResult)//首次同步来的tx
                 {
-                    tx->appendNodeContainsTransaction(fromPeer);
+                    tx->appendNodeContainsTransaction(fromPeer);//更新tx的   nodeList列表
                     tx->appendNodeListContainTransaction(*(txsShard->knownNodes));
                     successCnt++;
                 }
-                else if (dev::eth::ImportResult::AlreadyKnown == importResult)
+                else if (dev::eth::ImportResult::AlreadyKnown == importResult)//txPool已有；转发到下载queue的tx
                 {
                     SYNC_LOG(TRACE)
                         << LOG_BADGE("Tx")

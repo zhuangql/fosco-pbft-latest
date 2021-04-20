@@ -69,22 +69,22 @@ public:
         m_groupId = dev::eth::getGroupAndProtocol(m_protocolId).first;
         std::sort(m_sealerList.begin(), m_sealerList.end());
         m_lastSealerListUpdateNumber = m_blockChain->number();
-
-        // only send transactions to the current consensus nodes
+//tx只发给 当前轮的  共识节点
+        // only send transactions to the current consensus nodes   //构造函数内 可以访问到对象的所有成员m_sealerList？？？有this
         m_blockSync->registerTxsReceiversFilter(
             [&](std::shared_ptr<std::set<dev::network::NodeID>> _peers) {
                 std::shared_ptr<dev::p2p::NodeIDs> selectedNode =
                     std::make_shared<dev::p2p::NodeIDs>();
 
                 ReadGuard l(m_sealerListMutex);
-                for (auto const& peer : m_sealerList)                            //不明确_peers peers = m_syncStatus->peersSet();表示同步节点集
+                for (auto const& peer : m_sealerList)
                 {
                     if (_peers->count(peer))
                     {
                         selectedNode->push_back(peer);
                     }
                 }
-                return selectedNode;
+                return selectedNode;//返回  同步表peers && 当前高度sealer节点集
             });
     }
 

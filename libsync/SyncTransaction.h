@@ -63,7 +63,7 @@ public:
         m_blockChain(_blockChain)
     {
         // signal registration
-        m_tqReady = m_txPool->onReady([&]() { this->noteNewTransactions(); });
+        m_tqReady = m_txPool->onReady([&]() { this->noteNewTransactions(); });//有新的tx  插入交易池，唤醒交易同步线程
         /// set thread name
         std::string threadName = "SyncTrans-" + std::to_string(m_groupId);
         setName(threadName);
@@ -127,7 +127,7 @@ private:
     /// transaction pool handler
     std::shared_ptr<dev::txpool::TxPoolInterface> m_txPool;
 
-    std::shared_ptr<DownloadingTxsQueue> m_txQueue;
+    std::shared_ptr<DownloadingTxsQueue> m_txQueue;//下载的Tx queue    需要在广播？
 
     // Internal data
     PROTOCOL_ID m_protocolId;
@@ -149,7 +149,7 @@ private:
 
     // sync state
     std::atomic_bool m_newTransactions = {false};
-    std::atomic_bool m_needMaintainTransactions = {false};
+    std::atomic_bool m_needMaintainTransactions = {false};//在群组内，需要maintain tx；free状态，不需要maintain tx；
 
     // settings
     dev::eth::Handler<> m_tqReady;
@@ -162,7 +162,7 @@ private:
     std::shared_ptr<dev::h512s> m_fastForwardedNodes;
 
     TreeTopology::Ptr m_treeRouter;
-    std::shared_ptr<std::map<dev::h512, std::shared_ptr<std::set<dev::h256>>>> m_txsHash;
+    std::shared_ptr<std::map<dev::h512, std::shared_ptr<std::set<dev::h256>>>> m_txsHash;//节点发送的txs hash；key id,value txs
 
     unsigned m_txsStatusGossipMaxPeers = 5;
 

@@ -89,11 +89,11 @@ public:
         m_syncStatus =
             std::make_shared<SyncMasterStatus>(_blockChain, _protocolId, _genesisHash, _nodeId);//master status
 
-        m_txQueue = std::make_shared<DownloadingTxsQueue>(_protocolId, _nodeId);
+        m_txQueue = std::make_shared<DownloadingTxsQueue>(_protocolId, _nodeId);//下载的交易queue
         m_txQueue->setService(_service);
         m_txQueue->setSyncStatus(m_syncStatus);
 
-        if (m_enableSendTxsByTree)
+        if (m_enableSendTxsByTree)//false
         {
             auto treeRouter = std::make_shared<TreeTopology>(m_nodeId, _syncTreeWidth);
             m_txQueue->setTreeRouter(treeRouter);
@@ -118,7 +118,7 @@ public:
             m_txQueue, _protocolId, _nodeId, _genesisHash);
         m_msgEngine->onNotifyWorker([&]() { m_signalled.notify_all(); });
 
-        m_syncTrans = std::make_shared<SyncTransaction>(_service, _txPool, m_txQueue, _protocolId,
+        m_syncTrans = std::make_shared<SyncTransaction>(_service, _txPool, m_txQueue, _protocolId,//交易同步线程
             _nodeId, m_syncStatus, m_msgEngine, _blockChain, _idleWaitMs);
     }
 
@@ -290,7 +290,7 @@ private:
     /// Downloading txs queue
     std::shared_ptr<DownloadingTxsQueue> m_txQueue;
 
-    /// Block queue and peers    区块下载队列  和 同步节点表
+    /// Block queue and peers    区块下载队列  和 同步节点表（包含区块req）
     std::shared_ptr<SyncMasterStatus> m_syncStatus;
 
     /// Message handler of p2p              接收p2p消息
@@ -326,7 +326,7 @@ private:
     std::atomic_bool m_newBlocks = {false};//有新区块上链为1
     uint64_t m_maintainBlocksTimeout = 0;
     bool m_needSendStatus = true;//本node是群组成员 值为1
-    bool m_isGroupMember = false;
+    bool m_isGroupMember = false;//群组成员
 
     // sync transactions
     SyncTransaction::Ptr m_syncTrans = nullptr;

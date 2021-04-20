@@ -99,11 +99,11 @@ std::shared_ptr<SyncPeerStatus> SyncMasterStatus::peerStatus(NodeID const& _id)
     return peer->second;
 }
 
-/**
+/**从selectPeers 再次过滤 可以被发送tx的节点
  * @brief : filter the nodes that the txs should be sent to from a given node list
  *
  * @param nodes: the complete set that the given tx should be sent to
- * @param _allow : the filter function,
+ * @param _allow : the filter function,      filter()     返回1广播给此节点；返回0不广播，忽略此节点；
  *  if the function return true, then chose to broadcast transaction to the corresponding node
  *  if the function return false, then ignore the corresponding node
  * @return NodeIDs : the filtered node list that the txs should be sent to
@@ -116,24 +116,24 @@ NodeIDs SyncMasterStatus::filterPeers(int64_t const& _neighborSize, std::shared_
         return NodeIDs();
     }
     int64_t selectedSize = _peers->size();
-    if (selectedSize > _neighborSize)
+    if (selectedSize > _neighborSize)//场景 选25%时
     {
-        selectedSize = selectPeers(_neighborSize, _peers);
+        selectedSize = selectPeers(_neighborSize, _peers);//
     }
     NodeIDs chosen;
     ReadGuard l(x_peerStatus);
-    for (auto const& peer : (*_peers))
+    for (auto const& peer : (*_peers))//要发的每个node
     {
-        if (m_peersStatus.count(peer) && m_peersStatus[peer] && _allow(m_peersStatus[peer]))
-        {
+        if (m_peersStatus.count(peer) && m_peersStatus[peer] && _allow(m_peersStatus[peer]))//过滤（发过的不再发/只发给sealer/不发给已有此tx的node）
+        {   //满足了发送tx的要求
             chosen.push_back(peer);
-            if ((int64_t)chosen.size() == selectedSize)
+            if ((int64_t)chosen.size() == selectedSize)//只选25%的peer
             {
                 break;
             }
         }
     }
-    return chosen;
+    return chosen;//可发tx的node list
 }
 
 void SyncMasterStatus::foreachPeer(

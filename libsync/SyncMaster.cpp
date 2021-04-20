@@ -287,7 +287,7 @@ bool SyncMaster::sendSyncStatusByNodeId(
     return true;
 }
 //发区块req
-//1、控制发区块req的速度
+//1、控制发区块req的速度，防止req的block重复
 //2、找到已知的最高块，判断是否需要发req
 //3、需要同步，进入start downloading状态
 //4、选择要同步的最高区块：区块queue中的最小区块（queue断连情况），还是同步表中的最大区块
@@ -658,13 +658,13 @@ void SyncMaster::maintainPeersConnection()
         _p->isSealer = (sealerSet.find(_p->nodeId) != sealerSet.end());
         return true;
     });
-
-    // If myself is not in group, no need to maintain transactions(send transactions to peers)
+    //以下 为群组加的  可忽略
+    // If myself is not in group, no need to maintain transactions(send transactions to peers)没在群组内，不需要发送交易to peers
     m_syncTrans->updateNeedMaintainTransactions(hasMyself);
 
-    // If myself is not in group, no need to maintain blocks(send sync status to peers)  群组外的节点，不用发syncStatus给其他节点
+    // If myself is not in group, no need to maintain blocks(send sync status to peers)  没在群组内，不用发syncStatus to peers
     m_needSendStatus = m_isGroupMember || hasMyself;
-    m_txQueue->setNeedImportToTxPool(m_needSendStatus);
+    m_txQueue->setNeedImportToTxPool(m_needSendStatus);//不断更新 群组内的节点才需要将 downloading tx queue导入 交易池
     m_isGroupMember = hasMyself;
 }
 

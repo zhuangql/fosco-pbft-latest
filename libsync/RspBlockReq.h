@@ -37,8 +37,8 @@ class DownloadRequest
 {
 public:
     DownloadRequest(int64_t _fromNumber, int64_t _size) : fromNumber(_fromNumber), size(_size) {}
-    int64_t fromNumber; //节点ID？t
-    int64_t size; //区块大小？t
+    int64_t fromNumber; //req start
+    int64_t size; //区块size
 };
 
 struct RequestQueueCmp

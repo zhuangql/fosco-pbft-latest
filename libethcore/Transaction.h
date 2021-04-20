@@ -44,7 +44,7 @@ enum IncludeSignature
 
 enum class CheckTransaction
 {
-    None,
+    None,//啥意思？
     Cheap,
     Everything
 };
@@ -399,9 +399,9 @@ protected:
     u256 m_chainId;     /// < The scenario to which the transaction belongs.
     u256 m_groupId;     /// < The group to which the transaction belongs.
     bytes m_extraData;  /// < Reserved fields, distinguished by "##".
-    // used to represent that the transaction is received from rpc
+    // used to represent that the transaction is received from rpc   tx是否来自rpc    从rpc收到，设置为true
     bool m_rpcTx = false;
-    // Whether the transaction has been synchronized
+    // Whether the transaction has been synchronized   tx有没有同步（起到节点只广播一次tx的作用）     从txPool取出来广播时，被设置为true
     bool m_synced = false;
     // Record the list of nodes containing the transaction and provide related query interfaces.
     // This is separately abstracted as a class because the related map needs to be locked when

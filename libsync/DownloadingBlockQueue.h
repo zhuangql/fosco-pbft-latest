@@ -114,8 +114,8 @@ private:
 private:
     std::shared_ptr<dev::blockchain::BlockChainInterface> m_blockChain;
     NodeID m_nodeId;
-    std::priority_queue<BlockPtr, BlockPtrVec, BlockQueueCmp> m_blocks;  //
-    std::shared_ptr<ShardPtrVec> m_buffer;  // use buffer for faster push return
+    std::priority_queue<BlockPtr, BlockPtrVec, BlockQueueCmp> m_blocks;  //区块下载queue
+    std::shared_ptr<ShardPtrVec> m_buffer;  // use buffer for faster push return   从p2p收到
 
     mutable SharedMutex x_blocks;
     mutable SharedMutex x_buffer;

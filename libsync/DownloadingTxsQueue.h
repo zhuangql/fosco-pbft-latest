@@ -46,9 +46,9 @@ public:
     }
 
     void appendKnownNode(dev::h512 const& _knownNode) { knownNodes->push_back(_knownNode); }
-    bytes txsBytes;
-    NodeID fromPeer;//表示什么？
-    std::shared_ptr<dev::h512s> knownNodes;
+    bytes txsBytes;//Txs
+    NodeID fromPeer;//发tx的node
+    std::shared_ptr<dev::h512s> knownNodes;//tree？
 };
 
 class DownloadingTxsQueue
@@ -92,13 +92,13 @@ public:
 
 private:
     NodeID m_nodeId;
-    std::shared_ptr<std::vector<std::shared_ptr<DownloadTxsShard>>> m_buffer;
+    std::shared_ptr<std::vector<std::shared_ptr<DownloadTxsShard>>> m_buffer;//下载的tx
     mutable SharedMutex x_buffer;
-    mutable Mutex m_mutex;
-    TreeTopology::Ptr m_treeRouter = nullptr;
+    mutable Mutex m_mutex;//锁的范围是什么？
+    TreeTopology::Ptr m_treeRouter = nullptr;//不用tree为null
     SyncMasterStatus::Ptr m_syncStatus;
     dev::p2p::P2PInterface::Ptr m_service;
-    std::atomic_bool m_needImportToTxPool = {true};
+    std::atomic_bool m_needImportToTxPool = {true};//交易下载队列的交易  是否倒入   交易池
 };
 
 }  // namespace sync

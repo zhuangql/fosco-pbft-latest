@@ -574,7 +574,7 @@ bool Ledger::initSync()
 
     dev::PROTOCOL_ID protocol_id = getGroupProtoclID(m_groupId, ProtocolID::BlockSync);//前16群組id，后16模块id
     dev::h256 genesisHash = m_blockChain->getBlockByNumber(int64_t(0))->headerHash();
-    auto syncMaster = std::make_shared<SyncMaster>(m_service, m_txPool, m_blockChain,
+    auto syncMaster = std::make_shared<SyncMaster>(m_service, m_txPool, m_blockChain,//master
         m_blockVerifier, protocol_id, m_keyPair.pub(), genesisHash,
         m_param->mutableSyncParam().idleWaitMs, m_param->mutableSyncParam().gossipInterval,
         m_param->mutableSyncParam().gossipPeers, enableSendTxsByTree, enableSendBlockStatusByTree,
@@ -595,7 +595,7 @@ bool Ledger::initSync()
     }
     syncMaster->setSyncMsgPacketFactory(syncMsgPacketFactory);
 
-    // set the max block queue size for sync module(bytes)  缓存的最大下载队列 512M
+    // set the max block queue size for sync module(bytes)  缓存的最大区块下载队列 512M
     syncMaster->setMaxBlockQueueSize(m_param->mutableSyncParam().maxQueueSizeForBlockSync);
     syncMaster->setTxsStatusGossipMaxPeers(m_param->mutableSyncParam().txsStatusGossipMaxPeers);
     // set networkBandwidthLimiter   设置网络带宽限制

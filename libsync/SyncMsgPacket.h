@@ -67,7 +67,7 @@ public:
 
 public:
     SyncPacketType packetType;
-    NodeID nodeId;
+    NodeID nodeId;//发msg的node
 
 protected:
     RLP m_rlp;              /// The result of decode   从p2p接收的放这里
