@@ -67,7 +67,7 @@ public:
     /// hash set for filter fetched transactions
     //filter的交易，也就是下个sealer提前封装时候要过滤的当前sealer发送的prereq请求的交易集
     h256Hash m_transactionSet;
-    dev::blockverifier::ExecutiveContext::Ptr p_execContext; //不懂什么意思
+    dev::blockverifier::ExecutiveContext::Ptr p_execContext; //区块执行结果
     dev::eth::BlockFactory::Ptr m_blockFactory;
 };
 

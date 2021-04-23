@@ -149,7 +149,7 @@ public:
 
     class HandlerAux
     {
-        friend class Signal;
+        friend class Signal;//嵌套类 可直接使用外层类成员，不需要对该成员的名字进行限定
 
     public:
         ~HandlerAux()
@@ -161,7 +161,7 @@ public:
         void fire(Args const&... _args) { m_h(_args...); }
 
     private:
-        HandlerAux(unsigned _i, Signal* _s, Callback const& _h) : m_i(_i), m_s(_s), m_h(_h) {}
+        HandlerAux(unsigned _i, Signal* _s, Callback const& _h) : m_i(_i), m_s(_s), m_h(_h) {}//只有signal可以构造handleraux对象
 
         unsigned m_i = 0;
         Signal* m_s = nullptr;
@@ -175,10 +175,10 @@ public:
                 l->reset();
     }
 
-    std::shared_ptr<HandlerAux> add(Callback const& _h)
+    std::shared_ptr<HandlerAux> add(Callback const& _h)//HandlerAux作为Signal的返回类型，在外层类作用域中，所以不用加限定符 Signal::
     {
         auto n = m_fire.empty() ? 0 : (m_fire.rbegin()->first + 1);
-        auto h = std::shared_ptr<HandlerAux>(new HandlerAux(n, this, _h));
+        auto h = std::shared_ptr<HandlerAux>(new HandlerAux(n, this, _h));//外层类的成员可以像使用其他类型成员一样使用嵌套类的名字（不需要限定符）
         m_fire[n] = h;
         return h;
     }
@@ -191,11 +191,11 @@ public:
     }
 
 private:
-    std::map<unsigned, std::weak_ptr<typename Signal::HandlerAux>> m_fire;
+    std::map<unsigned, std::weak_ptr<typename Signal::HandlerAux>> m_fire;//typename Signal::   没有应该也可以；嵌套类是外层类的一个类型成员
 };
 
 template <class... Args>
-using Handler = std::shared_ptr<typename Signal<Args...>::HandlerAux>;
+using Handler = std::shared_ptr<typename Signal<Args...>::HandlerAux>;//Signal<Args...>:: 不能省略，因为nested class在外层类作用域之外不可见
 
 struct TransactionSkeleton
 {

@@ -666,7 +666,7 @@ CheckResult PBFTEngine::isValidPrepare(PrepareReq const& req, std::ostringstream
     // isHashSavedAfterCommit check failed
     // 5. the changeCycle of the other nodes with pbftBackup are larger than the new leader, the
     // system suffers from view-catchup  //看一下！！！
-    //没看空块处理逻辑 zhuangql  
+    //没看空块处理逻辑 zhuangql
     if (req.isEmpty && req.height == m_reqCache->committedPrepareCache().height)
     {
         // here for debug
@@ -886,7 +886,7 @@ void PBFTEngine::execBlock(Sealing& sealing, PrepareReq::Ptr _req, std::ostrings
     m_txPool->verifyAndSetSenderForBlock(*sealing.block);   //？？！！！没看
     auto verifyAndSetSender_time_cost = utcTime() - record_time;
     record_time = utcTime();
-    sealing.p_execContext = executeBlock(*sealing.block);//执行的内容是什么？！！！
+    sealing.p_execContext = executeBlock(*sealing.block);//执行区块
     auto exec_time_cost = utcTime() - record_time;
     PBFTENGINE_LOG(INFO)
         << LOG_DESC("execBlock") << LOG_KV("blkNum", sealing.block->header().number())
@@ -1087,7 +1087,7 @@ bool PBFTEngine::execPrepareAndGenerateSignMsg(
     PrepareReq::Ptr sign_prepare =
         std::make_shared<PrepareReq>(*_prepareReq, workingSealing, m_keyPair);
 
-    // destroy ExecutiveContext in m_destructorThread   //没看？？？
+    // destroy ExecutiveContext in m_destructorThread   //没看？？？  怎么处理的执行结果？？？？
     auto execContext = m_reqCache->prepareCache().p_execContext;
     HolderForDestructor<dev::blockverifier::ExecutiveContext> holder(std::move(execContext));
     m_destructorThread->enqueue(std::move(holder));
@@ -1262,7 +1262,7 @@ void PBFTEngine::reportBlock(Block const& block)
 {//统计日志配置。2。0。0没有此函数 开启网络流量和Gas统计功能
     ConsensusEngineBase::reportBlock(block);//统计日志配置。2。0。0没有此函数
 
-//mutex锁的范围是什么？ PBFT的环境？ 
+//mutex锁的范围是什么？ PBFT的环境？
     Guard l(m_mutex);
     reportBlockWithoutLock(block);
 }
@@ -1378,7 +1378,7 @@ CheckResult PBFTEngine::isValidSignReq(SignReq::Ptr req, std::ostringstream& oss
     /// to ensure that the collected signature size is equal to minValidNodes
     /// so that checkAndCommit can be called, and the committed request backup can be stored
     if (result == CheckResult::FUTURE)
-    {   
+    {
         //未来块的消息正常加入消息缓存中
         m_reqCache->addSignReq(req);
         PBFTENGINE_LOG(INFO) << LOG_DESC("FutureBlock") << LOG_KV("INFO", oss.str());

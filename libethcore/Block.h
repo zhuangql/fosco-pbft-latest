@@ -311,7 +311,7 @@ protected:
     mutable BlockHeader m_blockHeader;
     /// transaction list (field 1)
     mutable std::shared_ptr<Transactions> m_transactions;
-    std::shared_ptr<TransactionReceipts> m_transactionReceipts;
+    std::shared_ptr<TransactionReceipts> m_transactionReceipts;//交易收据？？？
     /// sig list (field 3)
     SigListPtrType m_sigList;
     /// m_transactions converted bytes, when m_transactions changed,

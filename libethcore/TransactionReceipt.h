@@ -92,17 +92,17 @@ public:
     void decode(RLP const& rlp);
 
 private:
-    h256 m_stateRoot;
+    h256 m_stateRoot;//区块状态根
     u256 m_gasUsed;
-    Address m_contractAddress;
+    Address m_contractAddress;//部署合约的地址
     LogBloom m_bloom;
 
 protected:
-    eth::TransactionException m_status;
+    eth::TransactionException m_status;//交易执行结果的状态码
 
 private:
-    bytes m_outputBytes;
-    LogEntries m_log;
+    bytes m_outputBytes;//交易返回值？？？
+    LogEntries m_log;//enent logs
 
 private:
     bytes m_receipt = bytes();
