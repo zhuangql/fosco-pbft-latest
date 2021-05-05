@@ -70,7 +70,7 @@ public:
         std::sort(m_sealerList.begin(), m_sealerList.end());
         m_lastSealerListUpdateNumber = m_blockChain->number();
 //tx只发给 当前轮的  共识节点
-        // only send transactions to the current consensus nodes   //构造函数内 可以访问到对象的所有成员m_sealerList？？？有this
+        // only send transactions to the current consensus nodes   //构造函数内 可以访问到this; 通过&，lumbda可以访问到this；
         m_blockSync->registerTxsReceiversFilter(
             [&](std::shared_ptr<std::set<dev::network::NodeID>> _peers) {
                 std::shared_ptr<dev::p2p::NodeIDs> selectedNode =

@@ -57,8 +57,8 @@ public:
 
 private:
     void completePath(std::string& _path);
-    KeyPair m_key;
-    std::map<Usage, std::shared_ptr<boost::asio::ssl::context>> m_sslContexts;
+    KeyPair m_key;//私钥、公钥、地址
+    std::map<Usage, std::shared_ptr<boost::asio::ssl::context>> m_sslContexts;//ssl
 
     void initConfigWithCrypto(const boost::property_tree::ptree& _pt);
     void initConfigWithSMCrypto(const boost::property_tree::ptree& pt);

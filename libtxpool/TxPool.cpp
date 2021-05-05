@@ -569,7 +569,7 @@ bool TxPool::dropBlockTrans(std::shared_ptr<Block> block)
         "dropBlockTrans, count:" + boost::lexical_cast<std::string>(block->transactions()->size()));
     // update the Nonces of txs
     // (must be updated before dropTransactions to in case of sealing the same txs)
-    m_txNonceCheck->updateCache(false);
+    m_txNonceCheck->updateCache(false);//要看一下
     dropTransactions(block, true);
     // delete the nonce cache
     m_txpoolNonceChecker->delCache(*(block->transactions()));

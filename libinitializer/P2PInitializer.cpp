@@ -45,7 +45,7 @@ void P2PInitializer::initConfig(boost::property_tree::ptree const& _pt)
     {
         BOOST_THROW_EXCEPTION(
             InvalidPort() << errinfo_comment(
-                "P2PInitializer:  initConfig for P2PInitializer failed! Invalid ListenPort!"));
+                "P2PInitializer:  initConfig for P2PInitializer failed! Invalid ListenPort!"));//在那里catch？？？
     }
     std::string certBlacklistSection = "crl";
     if (_pt.get_child_optional("certificate_blacklist"))

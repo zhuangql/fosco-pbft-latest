@@ -76,13 +76,12 @@ public:
         std::string threadName = "PBFT-" + std::to_string(m_groupId);
         setName(threadName);
 
-        /// register checkSealerList to blockSync for check SealerList
-        //检查什么？ 验证同步到的区块时候正确，通过sealist和commit消息
+        /// register checkSealerList to blockSync for check SealerList  验证同步到的区块时候正确，通过sealist和commit消息
         m_blockSync->registerConsensusVerifyHandler(boost::bind(&PBFTEngine::checkBlock, this, _1));
 
         m_threadPool =
             std::make_shared<dev::ThreadPool>("pbftPool-" + std::to_string(m_groupId), 1);
-        m_broacastTargetsFilter = boost::bind(&PBFTEngine::getIndexBySealer, this, _1);
+        m_broacastTargetsFilter = boost::bind(&PBFTEngine::getIndexBySealer, this, _1);//搞事情
 
         m_consensusSet = std::make_shared<std::set<dev::h512>>();
 
@@ -556,7 +555,7 @@ protected:
     {
         /// to ensure that the signReq can reach to consensus even if the view has been changed
         if (req.height >= m_consensusBlockNumber || req.view > m_view) //有点问题？什么情况下第二个条件能走到 zhuangql
-        //(req.height > m_consensusBlockNumber || 
+        //(req.height > m_consensusBlockNumber ||
         //(req.height == m_consensusBlockNumber && req.view >= m_view))
         {
             return true;

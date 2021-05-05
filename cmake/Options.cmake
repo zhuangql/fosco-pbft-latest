@@ -62,10 +62,10 @@ macro(configure_project)
     eth_default_option(DEMO OFF)
     # tools
     eth_default_option(TOOL OFF)
-    # code coverage
+    # code coverage  生成代码覆盖率
     eth_default_option(COVERAGE OFF)
 
-    #debug
+    #debug     内部用的debug模式
     eth_default_option(DEBUG OFF)
     if (DEBUG)
         add_definitions(-DFISCO_DEBUG)

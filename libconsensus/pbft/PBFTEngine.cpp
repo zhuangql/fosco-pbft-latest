@@ -1213,7 +1213,7 @@ void PBFTEngine::checkAndSave()
             /// drop handled transactions
             if (ret == CommitResult::OK)
             {
-                dropHandledTransactions(p_block);
+                dropHandledTransactions(p_block);//处理txPool
                 auto dropTxs_time_cost = utcTime() - record_time;
                 record_time = utcTime();
                 m_blockSync->noteSealingBlockNumber(m_reqCache->prepareCache().height);
@@ -1242,7 +1242,7 @@ void PBFTEngine::checkAndSave()
                     << LOG_KV("nodeIdx", nodeIdx()) << LOG_KV("myNode", m_keyPair.pub().abridged());
                 /// note blocksync to sync
                 m_blockSync->noteSealingBlockNumber(m_blockChain->number());
-                m_txPool->handleBadBlock(*p_block);
+                m_txPool->handleBadBlock(*p_block);//需要看一下
             }
         }
         else

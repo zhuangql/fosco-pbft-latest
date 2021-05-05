@@ -1,0 +1,6 @@
+info|2021-04-25 21:53:09.416375|[INITIALIZER][initGlobalConfig],enableCompress=true,compatibilityVersion=2.7.2,versionNumber=34013696,enableStat=false,chainId=1,useSMCrypto=false
+info|2021-04-25 21:53:14.564563|[INITIALIZER][SecureInitializer]loading privateKey
+info|2021-04-25 21:53:14.586477|[INITIALIZER][SecureInitializer]get pub of node,nodeID=8dc67ab093d9fac1e884346379113684508b74d2ba08c4e83d4d1c24527db8aad1c6701801b584655dced290803daa6830c90a7b409dc94b844bfe007b57a601
+info|2021-04-25 21:53:14.588110|[INITIALIZER][SecureInitializer]use user certificate,file=conf//node.crt
+info|2021-04-25 21:53:17.426172|[INITIALIZER][SecureInitializer]use ca certificate,file=conf//ca.crt
+info|2021-04-25 21:53:17.426320|[INITIALIZER][SecureInitializer]use ca,file=conf//

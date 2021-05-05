@@ -155,7 +155,7 @@ public:
         ~HandlerAux()
         {
             if (m_s)
-                m_s->m_fire.erase(m_i);
+                m_s->m_fire.erase(m_i);//删除f_fire的map，在析构handerAux的内存
         }
         void reset() { m_s = nullptr; }
         void fire(Args const&... _args) { m_h(_args...); }
@@ -163,29 +163,29 @@ public:
     private:
         HandlerAux(unsigned _i, Signal* _s, Callback const& _h) : m_i(_i), m_s(_s), m_h(_h) {}//只有signal可以构造handleraux对象
 
-        unsigned m_i = 0;
-        Signal* m_s = nullptr;
-        Callback m_h;
+        unsigned m_i = 0;//注册的hander序号；对应m_fire->first; 析构函数用的；
+        Signal* m_s = nullptr;//signal的对象
+        Callback m_h;//注册的其他对象的回调函数，调用注册对象的function
     };
 
     ~Signal()
     {
         for (auto const& h : m_fire)
             if (auto l = h.second.lock())
-                l->reset();
+                l->reset();//这个调用的是智能指针的reset还是handerAux的reset？？？将map中所有的hander中的m_s置空，有啥用
     }
 
     std::shared_ptr<HandlerAux> add(Callback const& _h)//HandlerAux作为Signal的返回类型，在外层类作用域中，所以不用加限定符 Signal::
     {
         auto n = m_fire.empty() ? 0 : (m_fire.rbegin()->first + 1);
         auto h = std::shared_ptr<HandlerAux>(new HandlerAux(n, this, _h));//外层类的成员可以像使用其他类型成员一样使用嵌套类的名字（不需要限定符）
-        m_fire[n] = h;
+        m_fire[n] = h;//注册的hander要放在 hander所在内存中，因为如果那块内存回收就不该调用其hander了，所以signal用weakptr跟踪；
         return h;
     }
 
     void operator()(Args const&... _args)
     {
-        for (auto const& f : valuesOf(m_fire))
+        for (auto const& f : valuesOf(m_fire))//返回m_fire的values（vector<typename Signal<Args...>::HandlerAux>）
             if (auto h = f.lock())
                 h->fire(_args...);
     }

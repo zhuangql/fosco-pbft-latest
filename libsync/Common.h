@@ -75,7 +75,7 @@ using BlockPtrVec = std::vector<BlockPtr>;
 enum SyncPacketType : byte
 {
     StatusPacket = 0x00,
-    TransactionsPacket = 0x01,
+    TransactionsPacket = 0x01,//多个交易包 1000个
     BlocksPacket = 0x02,
     ReqBlocskPacket = 0x03,
     TxsStatusPacket = 0x04,

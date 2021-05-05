@@ -49,9 +49,9 @@ void Initializer::init(std::string const& _path)
 
         // init certificates
         m_secureInitializer = std::make_shared<SecureInitializer>();
-        m_secureInitializer->initConfig(pt);
+        m_secureInitializer->initConfig(pt);//加载private key、node_ca、ca
 
-        m_p2pInitializer = std::make_shared<P2PInitializer>();
+        m_p2pInitializer = std::make_shared<P2PInitializer>();//初始化p2p
         m_p2pInitializer->setSSLContext(
             m_secureInitializer->SSLContext(SecureInitializer::Usage::ForP2P));
         m_p2pInitializer->setKeyPair(m_secureInitializer->keyPair());

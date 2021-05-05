@@ -94,8 +94,6 @@ protected:
 
         // called by viewchange procedure to reset block when timeout
         //engine超时调用sealer resetBlock，没看懂 zhuangql
-        //私有成员函数resetBlockForViewChang-e可以在类内部调用
-        //（engine可以调用sealer的私有成员，sealer不可以调用engine的私有成员吧？只调用public）
         m_pbftEngine->onViewChange(boost::bind(&PBFTSealer::resetBlockForViewChange, this));
 
         /// called by the next leader to reset block when it receives the prepare block
@@ -107,7 +105,7 @@ protected:
         // resetConfig to update m_sealersNum
         //更新engine环境中sealer数量
         m_pbftEngine->resetConfig();                   //2.0.0版本没有此函数
-        /// set thread name for PBFTSealer 
+        /// set thread name for PBFTSealer
         std::string threadName = "PBFTSeal-" + std::to_string(m_pbftEngine->groupId());//默认转换uint_16转换为int
         setName(threadName);
     }
@@ -124,7 +122,7 @@ protected:
     }//get-leader获得的leader应该是正在共识轮的sealer
 
     bool reachBlockIntervalTime() override   //sealer handle区块：0.5s内不handle，大于0.5s 区块有交易就handle，大于1s必handle
-    {//1、时间达到1s   或者   2、交易数大于0  &&  达到0.5s   
+    {//1、时间达到1s   或者   2、交易数大于0  &&  达到0.5s
         return m_pbftEngine->reachBlockIntervalTime() ||
                (m_sealing.block->getTransactionSize() > 0 && m_pbftEngine->reachMinBlockGenTime());
     }
@@ -195,7 +193,7 @@ protected:
     /// the maximum number of transactions that has been consensused without timeout
     uint64_t m_maxNoTimeoutTx = 0;//2。0。0版本有
     /// timeout counter  动态调整区块大小  //2。0。0版本有以下4个
-    int64_t m_timeoutCount = 0;     
+    int64_t m_timeoutCount = 0;
     //start时动态调整区块大小时候设定的，不知道是不是只为动态调整区块大小服务
     //链上最高区块号
     uint64_t m_lastBlockNumber = 0;

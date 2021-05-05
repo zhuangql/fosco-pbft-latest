@@ -43,11 +43,11 @@ void SecureInitializer::initConfigWithCrypto(const boost::property_tree::ptree& 
     {
         sectionName = "network_security";
     }
-    std::string dataPath = pt.get<std::string>(sectionName + ".data_path", "./conf/");
-    std::string key = dataPath + "/" + pt.get<std::string>(sectionName + ".key", "node.key");
-    std::string cert = dataPath + "/" + pt.get<std::string>(sectionName + ".cert", "node.crt");
-    std::string caCert = dataPath + "/" + pt.get<std::string>(sectionName + ".ca_cert", "ca.crt");
-    std::string caPath = dataPath + "/" + pt.get<std::string>(sectionName + ".ca_path", "");
+    std::string dataPath = pt.get<std::string>(sectionName + ".data_path", "./conf/");//network_security的data_path文件路径
+    std::string key = dataPath + "/" + pt.get<std::string>(sectionName + ".key", "node.key");//jprivate key
+    std::string cert = dataPath + "/" + pt.get<std::string>(sectionName + ".cert", "node.crt");//节点证书
+    std::string caCert = dataPath + "/" + pt.get<std::string>(sectionName + ".ca_cert", "ca.crt");//ca证书
+    std::string caPath = dataPath + "/" + pt.get<std::string>(sectionName + ".ca_path", "");//ca证书路径
     bytes keyContent;
     if (!key.empty())
     {
@@ -56,7 +56,7 @@ void SecureInitializer::initConfigWithCrypto(const boost::property_tree::ptree& 
             if (g_BCOSConfig.diskEncryption.enable)
                 keyContent = EncryptedFile::decryptContents(key);
             else
-                keyContent = contents(key);
+                keyContent = contents(key);//读取private_key文件（node.key）
         }
         catch (std::exception& e)
         {
@@ -76,10 +76,10 @@ void SecureInitializer::initConfigWithCrypto(const boost::property_tree::ptree& 
             INITIALIZER_LOG(INFO) << LOG_BADGE("SecureInitializer")
                                   << LOG_DESC("loading privateKey");
             std::shared_ptr<BIO> bioMem(BIO_new(BIO_s_mem()), [&](BIO* p) { BIO_free(p); });
-            BIO_write(bioMem.get(), keyContent.data(), keyContent.size());
+            BIO_write(bioMem.get(), keyContent.data(), keyContent.size());//加载私钥   到 biomem
 
             std::shared_ptr<EVP_PKEY> evpPKey(
-                PEM_read_bio_PrivateKey(bioMem.get(), NULL, NULL, NULL),
+                PEM_read_bio_PrivateKey(bioMem.get(), NULL, NULL, NULL),//biomem到 evppkey
                 [](EVP_PKEY* p) { EVP_PKEY_free(p); });
 
             if (!evpPKey)
@@ -89,7 +89,7 @@ void SecureInitializer::initConfigWithCrypto(const boost::property_tree::ptree& 
                 exit(1);
             }
 
-            ecKey.reset(EVP_PKEY_get1_EC_KEY(evpPKey.get()), [](EC_KEY* p) { EC_KEY_free(p); });
+            ecKey.reset(EVP_PKEY_get1_EC_KEY(evpPKey.get()), [](EC_KEY* p) { EC_KEY_free(p); });//evppkey到eckey
         }
         catch (dev::Exception& e)
         {
@@ -111,17 +111,17 @@ void SecureInitializer::initConfigWithCrypto(const boost::property_tree::ptree& 
     }
 
     std::shared_ptr<const BIGNUM> ecPrivateKey(
-        EC_KEY_get0_private_key(ecKey.get()), [](const BIGNUM*) {});
+        EC_KEY_get0_private_key(ecKey.get()), [](const BIGNUM*) {});//私钥
 
     std::shared_ptr<char> privateKeyData(
         BN_bn2hex(ecPrivateKey.get()), [](char* p) { OPENSSL_free(p); });
 
-    std::string keyHex(privateKeyData.get());
+    std::string keyHex(privateKeyData.get());//私钥
     if (keyHex.size() != 64u)
     {
         throw std::invalid_argument("Incompleted privateKey!");
     }
-    m_key = KeyPair(Secret(keyHex));
+    m_key = KeyPair(Secret(keyHex));//私钥->公钥->地址
 
     try
     {
@@ -135,14 +135,14 @@ void SecureInitializer::initConfigWithCrypto(const boost::property_tree::ptree& 
         INITIALIZER_LOG(INFO) << LOG_BADGE("SecureInitializer") << LOG_DESC("get pub of node")
                               << LOG_KV("nodeID", m_key.pub().hex());
 
-        boost::asio::const_buffer keyBuffer(keyContent.data(), keyContent.size());
-        sslContext->use_private_key(keyBuffer, boost::asio::ssl::context::file_format::pem);
+        boost::asio::const_buffer keyBuffer(keyContent.data(), keyContent.size());//
+        sslContext->use_private_key(keyBuffer, boost::asio::ssl::context::file_format::pem);           //私钥到ssl
 
         if (!cert.empty() && !contents(cert).empty())
         {
             INITIALIZER_LOG(INFO) << LOG_BADGE("SecureInitializer")
                                   << LOG_DESC("use user certificate") << LOG_KV("file", cert);
-            sslContext->use_certificate_chain_file(cert);
+            sslContext->use_certificate_chain_file(cert);                                                                                       //加载节点证书
             if (!SSL_CTX_get0_certificate(sslContext->native_handle()))
             {
                 INITIALIZER_LOG(ERROR)
@@ -169,7 +169,7 @@ void SecureInitializer::initConfigWithCrypto(const boost::property_tree::ptree& 
             INITIALIZER_LOG(INFO) << LOG_BADGE("SecureInitializer")
                                   << LOG_DESC("use ca certificate") << LOG_KV("file", caCert);
             sslContext->add_certificate_authority(
-                boost::asio::const_buffer(caCertContent.data(), caCertContent.size()));
+                boost::asio::const_buffer(caCertContent.data(), caCertContent.size()));                     //加载ca证书
         }
         else
         {
@@ -184,12 +184,12 @@ void SecureInitializer::initConfigWithCrypto(const boost::property_tree::ptree& 
         {
             INITIALIZER_LOG(INFO) << LOG_BADGE("SecureInitializer") << LOG_DESC("use ca")
                                   << LOG_KV("file", caPath);
-            sslContext->add_verify_path(caPath);
+            sslContext->add_verify_path(caPath);                                                                                                //ca验证路径
         }
         sslContext->set_verify_mode(boost::asio::ssl::context_base::verify_peer |
                                     boost::asio::ssl::verify_fail_if_no_peer_cert);
 
-        m_sslContexts[Usage::Default] = sslContext;
+        m_sslContexts[Usage::Default] = sslContext; //default
     }
     catch (Exception& e)
     {
@@ -347,7 +347,7 @@ ConfigResult initOriginConfig(const string& _dataPath)
                                << LOG_KV("file", caCert);
 
         sslContext->add_certificate_authority(
-            boost::asio::const_buffer(caCertContent.data(), caCertContent.size()));
+            boost::asio::const_buffer(caCertContent.data(), caCertContent.size()));//
     }
     else
     {
@@ -577,7 +577,7 @@ void SecureInitializer::initConfig(const boost::property_tree::ptree& pt)
     }
     else
     {
-        initConfigWithCrypto(pt);
+        initConfigWithCrypto(pt);//加载 私钥、节点证书、ca证书
     }
 }
 

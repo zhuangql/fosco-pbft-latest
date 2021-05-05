@@ -1,0 +1,113 @@
+info|2021-04-25 17:22:38.350569|[INITIALIZER][initGlobalConfig],enableCompress=true,compatibilityVersion=2.7.2,versionNumber=34013696,enableStat=false,chainId=1,useSMCrypto=false
+info|2021-04-25 17:22:38.350659|[INITIALIZER][SecureInitializer]loading privateKey
+info|2021-04-25 17:22:38.368637|[INITIALIZER][SecureInitializer]get pub of node,nodeID=8dc67ab093d9fac1e884346379113684508b74d2ba08c4e83d4d1c24527db8aad1c6701801b584655dced290803daa6830c90a7b409dc94b844bfe007b57a601
+info|2021-04-25 17:22:38.368778|[INITIALIZER][SecureInitializer]use user certificate,file=conf//node.crt
+info|2021-04-25 17:22:38.369654|[INITIALIZER][SecureInitializer]use ca certificate,file=conf//ca.crt
+info|2021-04-25 17:22:38.369706|[INITIALIZER][SecureInitializer]use ca,file=conf//
+info|2021-04-25 17:22:38.379822|[P2P][Service] heartBeat,connected count=0
+info|2021-04-25 17:22:38.379881|[INITIALIZER][RPCInitializer],network_security.check_cert_issuer=true
+info|2021-04-25 17:22:38.380145|[NETWORK][Host]P2P StartAccept,Host=0.0.0.0:30300
+info|2021-04-25 17:22:38.385276|[CHANNEL]ChannelRPCServer started
+info|2021-04-25 17:22:38.385311|[INITIALIZER][RPCInitializer]ChannelRPCHttpServer started.
+info|2021-04-25 17:22:38.385324|[INITIALIZER][LedgerInitializer]initConfig
+info|2021-04-25 17:22:38.385335|[LedgerInitializer],groupConfigPath=conf/
+info|2021-04-25 17:22:38.385450|[INITIALIZER][initSingleLedger] [GroupId], LedgerConstructor:  1,configFileName=conf/group.1.genesis,dataDir=data/
+info|2021-04-25 17:22:38.385504|[g:1][LedgerParam][parseGenesisConfig]initConsensusConfig/initStorageConfig/initTxConfig,configFile=conf/group.1.genesis
+info|2021-04-25 17:22:38.385520|[g:1][LedgerParam][initConsensusConfig],type=pbft,consensusTimeout=3,maxTxNum=1000,txGasLimit=300000000
+info|2021-04-25 17:22:38.385534|[g:1][LedgerParam][parsePublicKeyListOfSection],sectionName=consensus,it.first=8dc67ab093d9fac1e884346379113684508b74d2ba08c4e83d4d1c24527db8aad1c6701801b584655dced290803daa6830c90a7b409dc94b844bfe007b57a601
+info|2021-04-25 17:22:38.385545|[g:1][LedgerParam][parsePublicKeyListOfSection],sectionName=consensus,it.first=58aa140c21987706baa1f0d29172d679c5855fb7ce45947ef329ffcdd582623b0f5bba4aca9e4eafa406c955e9083233bb960caeffae52a41765a5a409cf01a1
+info|2021-04-25 17:22:38.385559|[g:1][LedgerParam][parsePublicKeyListOfSection],sectionName=consensus,it.first=323df303e56fbf0a61bb35d92f19d59344bd741cb6f842fb50bcf5394f8ce73e37dfac702d659959def2144bfae82242d93333796cd309fd6d9d88f57aa47171
+info|2021-04-25 17:22:38.385568|[g:1][LedgerParam][parsePublicKeyListOfSection],sectionName=consensus,it.first=e2fb6e74f5cec068e63f55ff8f430bad848f4244ecd315a5a96567040a0858c8dbbe2b4d3c4ea3dfd71c2af3852ac7a42b7fb0b359f628b012e9e0374e658f01
+info|2021-04-25 17:22:38.385572|[g:1][LedgerParam][parsePublicKeyListOfSection],totalPubKeySize=4
+info|2021-04-25 17:22:38.385587|[g:1][LedgerParam][max_block_range],maxBlockRange=0,maxBlockPerProcess=3
+info|2021-04-25 17:22:38.385594|[g:1][LedgerParam][parseGenesisConfig],timestamp=1618211863000
+info|2021-04-25 17:22:38.385605|[g:1][LedgerParam]setEVMFlags,enableFreeStorageVMSchedule=false,evmFlags=0
+info|2021-04-25 17:22:38.385621|[g:1][LedgerParam]store evmFlag,evmFlag=0
+info|2021-04-25 17:22:38.385628|[g:1][LedgerParam]store consensus time,consensusTimeout=3
+info|2021-04-25 17:22:38.385632|[g:1][LedgerParam][initMark],genesisMark=1-8dc67ab093d9fac1e884346379113684508b74d2ba08c4e83d4d1c24527db8aad1c6701801b584655dced290803daa6830c90a7b409dc94b844bfe007b57a601,58aa140c21987706baa1f0d29172d679c5855fb7ce45947ef329ffcdd582623b0f5bba4aca9e4eafa406c955e9083233bb960caeffae52a41765a5a409cf01a1,323df303e56fbf0a61bb35d92f19d59344bd741cb6f842fb50bcf5394f8ce73e37dfac702d659959def2144bfae82242d93333796cd309fd6d9d88f57aa47171,e2fb6e74f5cec068e63f55ff8f430bad848f4244ecd315a5a96567040a0858c8dbbe2b4d3c4ea3dfd71c2af3852ac7a42b7fb0b359f628b012e9e0374e658f01,-pbft-storage-0-1000-300000000-3
+info|2021-04-25 17:22:38.385636|[g:1][LedgerParam][initIniConfig]initTxPoolConfig/initSyncConfig/initTxExecuteConfig,configFile=conf/group.1.ini
+info|2021-04-25 17:22:38.385757|[g:1][LedgerParam][initStorageConfig],stateType=storage,storageDB=rocksdb,storagePath=data//group1/block/RocksDB,baseDir=data//group1,dbtype=mysql,dbip=127.0.0.1,dbport=3306,dbcharset=utf8mb4,initconnections=15,maxconnections=50,scrollThreshold=2000
+info|2021-04-25 17:22:38.385773|[g:1][LedgerParam][initTxPoolConfig],txPoolLimit=150000,memorySizeLimit(MB)=512,notifyWorkerNum=2
+info|2021-04-25 17:22:38.385779|[g:1][LedgerParam][initSyncConfig],idleWaitMs=200
+info|2021-04-25 17:22:38.385786|[g:1][LedgerParam][initSyncConfig],enableSendTxsByTree=true,enableSendBlockStatusByTree=true
+info|2021-04-25 17:22:38.385791|[g:1][LedgerParam][initSyncConfig],gossipInterval=1000
+info|2021-04-25 17:22:38.385799|[g:1][LedgerParam][initSyncConfig],enableSendBlockStatusByTree=true,gossipInterval=1000,gossipPeers=3,syncTreeWidth=3,maxQueueSizeForBlockSync=536870912,txsStatusGossipMaxPeers=5
+info|2021-04-25 17:22:38.385806|[g:1][LedgerParam][InitTxExecuteConfig],enableParallel=true
+info|2021-04-25 17:22:38.385819|[g:1][LedgerParam][initConsensusIniConfig],maxTTL=2,minBlockGenerationTime=500,enablDynamicBlockSize=true,blockSizeIncreaseRatio=0.5,enableTTLOptimize=true,enablePrepareWithTxsHash=true
+info|2021-04-25 17:22:38.385854|[g:1][LedgerParam][initRPBFTConsensusIniConfig],broadcastPrepareByTree=true,prepareStatusBroadcastPercent=33,maxRequestMissedTxsWaitTime=100,maxRequestPrepareWaitTime=100
+info|2021-04-25 17:22:38.385861|[g:1][LedgerParam][initFlowControlConfig],maxQPS=9223372036854775807,outGoingBandwidth(Bytes)=9223372036854775807
+info|2021-04-25 17:22:38.385866|[g:1][LedgerParam]parseSDKAllowList,sdkAllowList=[],enableSDKAllowListControl=false
+info|2021-04-25 17:22:38.385879|[g:1][LEDGER][initLedger][DBInitializer]
+info|2021-04-25 17:22:38.385883|[g:1][LEDGER]setSDKAllowList,groupId=1,sdkAllowListSize=0
+info|2021-04-25 17:22:38.385895|[g:1][CHANNEL]registerSDKAllowListByGroupId,groupId=1,size=0
+info|2021-04-25 17:22:38.385902|[g:1][CHANNEL]Disable group-level sdk permission control for sdk allowlist is empty
+info|2021-04-25 17:22:38.385909|[g:1][DBINITIALIZER] [initStorageDB]
+info|2021-04-25 17:22:38.385913|[g:1][DBINITIALIZER] [initRocksDBStorage]
+info|2021-04-25 17:22:38.390003|[g:1][ROCKSDB]open rocksDB handler,path=data//group1/block/RocksDB
+info|2021-04-25 17:22:38.417314|[g:1][g:1][STORAGE][CachedStorage]Init flushStorage thread
+info|2021-04-25 17:22:38.418350|[g:1][DBINITIALIZER] [init CachedStorage],maxCapacity=32,maxForwardBlock=10
+info|2021-04-25 17:22:38.418379|[g:1][LEDGER][initLedger][initBlockChain]
+info|2021-04-25 17:22:38.420321|[g:1][LEDGER]set enableHexBlock to be false,version=34013696
+info|2021-04-25 17:22:38.420355|[g:1][BLOCKCHAIN][#checkAndBuildGenesisBlock],shouldBuild=true
+warning|2021-04-25 17:22:38.420626|[g:1][BLOCKCHAIN][getBlock]Can't find block,number=0
+info|2021-04-25 17:22:38.421888|[g:1][BLOCKCHAIN]init consensus timeout,consensus_timeout=3
+info|2021-04-25 17:22:38.423606|[g:1][g:1][STORAGE][CachedStorage]commit: 5 num: 0
+info|2021-04-25 17:22:38.423767|[g:1][g:1][STORAGE][CachedStorage]Submited block task: 0, current syncd block: 0
+info|2021-04-25 17:22:38.423804|[g:1][BLOCKCHAIN][#checkAndBuildGenesisBlock]Insert the 0th block
+info|2021-04-25 17:22:38.423835|[g:1][LEDGER][initLedger]initBlockChain SUCC
+info|2021-04-25 17:22:38.424002|[g:1][DBINITIALIZER] [createStateFactory],type=storage
+info|2021-04-25 17:22:38.424020|[g:1][DBINITIALIZER] createStorageState SUCC
+info|2021-04-25 17:22:38.424024|[g:1][DBINITIALIZER] [createStateFactory SUCC]
+info|2021-04-25 17:22:38.424028|[g:1][DBINITIALIZER] createExecutiveContext...
+info|2021-04-25 17:22:38.424045|[g:1][LEDGER]createGasMetric,vmFlagType=0
+info|2021-04-25 17:22:38.424059|[g:1][LEDGER]createGasMetric
+info|2021-04-25 17:22:38.424066|[g:1][DBINITIALIZER] create precompiledGasFactory and precompiledResultFactory
+info|2021-04-25 17:22:38.424070|[g:1][DBINITIALIZER] createExecutiveContext SUCC
+info|2021-04-25 17:22:38.424075|[g:1][DBINITIALIZER] [setSyncNumForCachedStorage],syncNum=0
+info|2021-04-25 17:22:38.424082|[g:1][LEDGER][initNetworkBandWidthLimiter: outGoingBandwidthLimit has been disabled],groupId=1
+info|2021-04-25 17:22:38.424087|[g:1][LEDGER][QPSLimit has been disabled],groupId=1
+info|2021-04-25 17:22:38.424092|[g:1][LEDGER][initLedger][initBlockVerifier]
+info|2021-04-25 17:22:38.424098|[g:1][LEDGER][initLedger][initBlockVerifier SUCC],evmFlags=0
+info|2021-04-25 17:22:38.424104|[g:1][LEDGER][initLedger][initTxPool],txPoolLimit=150000
+info|2021-04-25 17:22:38.424214|[g:1][g:1][STORAGE][CachedStorage]Start commit block: 0 to backend storage
+info|2021-04-25 17:22:38.425087|[g:1][g:1][STORAGE][CachedStorage]
+---------------------------------------------------------------------
+Commit block: 0 to backend storage finished, current cached block: 0
+Flush elapsed time: 0.0009s
+---------------------------------------------------------------------
+
+info|2021-04-25 17:22:38.426323|[g:1][LEDGER][initLedger]initTxPool SUCC
+info|2021-04-25 17:22:38.426343|[g:1][LEDGER][initLedger][initSync],idleWaitMs=200,gossipInterval=1000,gossipPeers=3
+info|2021-04-25 17:22:38.426353|[g:1][LEDGER]Init sync master,enableSendBlockStatusByTree=true,enableSendTxsByTree=true
+info|2021-04-25 17:22:38.429471|[g:1][LEDGER][initLedger]initSync SUCC
+info|2021-04-25 17:22:38.429499|[g:1][LEDGER][initLedger][consensusInitFactory]
+info|2021-04-25 17:22:38.429523|[g:1][LEDGER][initLedger][createPBFTSealer]
+info|2021-04-25 17:22:38.429529|[g:1][LEDGER][initLedger][createPBFTSealer],baseDir=data//group1,Protocol=65544
+info|2021-04-25 17:22:38.429544|[g:1][LEDGER][initLedger]createPBFTSealer for PBFT or rPBFT,consensusType=pbft
+info|2021-04-25 17:22:38.429550|[g:1][LEDGER]createConsensusEngine: create PBFTEngine
+info|2021-04-25 17:22:38.429575|[g:1][CONSENSUS][PBFT]Register handler for PBFTEngine
+info|2021-04-25 17:22:38.430848|[g:1][CONSENSUS][PBFT]setMinBlockGenerationTime,minBlockGenerationTime=500,consensusTime=1000
+info|2021-04-25 17:22:38.430867|[g:1][LEDGER][initEventLogFilterManager]initEventLogFilterManager SUCC
+info|2021-04-25 17:22:38.430896|[LedgerInitializer init group succ],groupID=1
+info|2021-04-25 17:22:38.433231|[INITIALIZER][RPCInitializer JsonrpcHttpServer started],jsonrpc_IP=127.0.0.1,jsonrpc_listen_port=8545,ipv6=false
+info|2021-04-25 17:22:38.433266|[g:1][LEDGER]startAll...
+info|2021-04-25 17:22:38.434609|[g:1][GossipBlockStatus]start GossipBlockStatus succ
+info|2021-04-25 17:22:38.435586|[g:1][CONSENSUS][ConsensusEngine][Start ConsensusEngineBase]
+info|2021-04-25 17:22:38.436002|[g:1][CONSENSUS][PBFT]^^^^^^^^Report,num=0,sealerIdx=0,hash=4748d52a...,next=1,tx=0,nodeIdx=2
+info|2021-04-25 17:22:38.436121|[g:1][ROCKSDB]open rocksDB handler,path=data//group1/pbftMsgBackup/RocksDB
+info|2021-04-25 17:22:38.456980|[g:1][CONSENSUS][PBFT][PBFT init env successfully]
+info|2021-04-25 17:22:38.457008|[g:1][CONSENSUS][PBFT][Start PBFTEngine...]
+info|2021-04-25 17:22:38.457012|[g:1][CONSENSUS][SEALER][Start sealer module]
+info|2021-04-25 17:22:38.457139|[g:1][CONSENSUS][PBFT]^^^^^^^^Report,num=0,sealerIdx=0,hash=4748d52a...,next=1,tx=0,nodeIdx=2
+info|2021-04-25 17:22:38.457890|[g:1][EVENT][EventLogFilterManager]start,m_maxBlockRange=0,m_maxBlockPerLoopFilter=3
+warning|2021-04-25 17:22:41.457609|[g:1][CONSENSUS][PBFT]ViewChangeWarning: not caused by omit empty block ,v=0,toV=1,curNum=0,hash=4748d52a...,nodeIdx=2,myNode=8dc67ab0...
+warning|2021-04-25 17:22:41.458354|[g:1][CONSENSUS][PBFT]Find disconnectedNode,disconnectedNodeSize=3,sessionSize=0,minValidNodes=3,connectedNodeList=,disconnectedNode=323df303..., 58aa140c..., e2fb6e74..., ,idx=2
+info|2021-04-25 17:22:41.458903|[g:1][CONSENSUS][PBFT]checkTimeout Succ,view=0,toView=1,nodeIdx=2,changeCycle=1,myNode=8dc67ab0...,timecost=15.901
+warning|2021-04-25 17:22:45.949721|[g:1][CONSENSUS][PBFT]ViewChangeWarning: not caused by omit empty block ,v=0,toV=2,curNum=0,hash=4748d52a...,nodeIdx=2,myNode=8dc67ab0...
+warning|2021-04-25 17:22:45.949918|[g:1][CONSENSUS][PBFT]Find disconnectedNode,disconnectedNodeSize=3,sessionSize=0,minValidNodes=3,connectedNodeList=,disconnectedNode=323df303..., 58aa140c..., e2fb6e74..., ,idx=2
+info|2021-04-25 17:22:45.950001|[g:1][CONSENSUS][PBFT]checkTimeout Succ,view=0,toView=2,nodeIdx=2,changeCycle=2,myNode=8dc67ab0...,timecost=0.82
+info|2021-04-25 17:22:48.381022|[P2P][Service] heartBeat,connected count=0
+warning|2021-04-25 17:22:53.092284|[g:1][CONSENSUS][PBFT]ViewChangeWarning: not caused by omit empty block ,v=0,toV=3,curNum=0,hash=4748d52a...,nodeIdx=2,myNode=8dc67ab0...
+warning|2021-04-25 17:22:53.092364|[g:1][CONSENSUS][PBFT]Find disconnectedNode,disconnectedNodeSize=3,sessionSize=0,minValidNodes=3,connectedNodeList=,disconnectedNode=323df303..., 58aa140c..., e2fb6e74..., ,idx=2
+info|2021-04-25 17:22:53.092415|[g:1][CONSENSUS][PBFT]checkTimeout Succ,view=0,toView=3,nodeIdx=2,changeCycle=3,myNode=8dc67ab0...,timecost=0.395
+info|2021-04-25 17:23:01.719621|[P2P][Service] heartBeat,connected count=0

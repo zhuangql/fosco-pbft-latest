@@ -79,7 +79,7 @@ public:
         std::string threadName = "Sync-" + std::to_string(m_groupId);
         setName(threadName);
         // signal registration
-        m_blockSubmitted = m_blockChain->onReady([&](int64_t) { this->noteNewBlocks(); });//after construct function the obj exit
+        m_blockSubmitted = m_blockChain->onReady([&](int64_t) { this->noteNewBlocks(); });//& this的捕获方式是引用还是复制？                                                                    after construct function the obj exit
         m_downloadBlockProcessor =//
             std::make_shared<dev::ThreadPool>("Download-" + std::to_string(m_groupId), 1);
         m_sendBlockProcessor =//
@@ -116,7 +116,7 @@ public:
         }
         m_msgEngine = std::make_shared<SyncMsgEngine>(_service, _txPool, _blockChain, m_syncStatus,//msg engine  和 syncMaster共用一个同步表
             m_txQueue, _protocolId, _nodeId, _genesisHash);
-        m_msgEngine->onNotifyWorker([&]() { m_signalled.notify_all(); });
+        m_msgEngine->onNotifyWorker([&]() { m_signalled.notify_all(); });//引用的this
 
         m_syncTrans = std::make_shared<SyncTransaction>(_service, _txPool, m_txQueue, _protocolId,//交易同步线程
             _nodeId, m_syncStatus, m_msgEngine, _blockChain, _idleWaitMs);
