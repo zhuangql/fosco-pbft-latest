@@ -194,12 +194,12 @@ void RPCInitializer::initConfig(boost::property_tree::ptree const& _pt)
         // Don't to set destructor, the ModularServer will destruct.
         auto rpcEntity = new rpc::Rpc(m_ledgerInitializer, m_p2pService);
         auto ipAddress = boost::asio::ip::make_address(listenIP);
-        m_safeHttpServer.reset(new SafeHttpServer(listenIP, httpListenPort, ipAddress.is_v6()),
+        m_safeHttpServer.reset(new SafeHttpServer(listenIP, httpListenPort, ipAddress.is_v6()),//构造一个http服务器
             [](SafeHttpServer* p) { (void)p; });
         m_jsonrpcHttpServer = new ModularServer<rpc::Rpc>(rpcEntity);
-        m_jsonrpcHttpServer->addConnector(m_safeHttpServer.get());
+        m_jsonrpcHttpServer->addConnector(m_safeHttpServer.get());//将http服务器 加到 jsonrpc httpserver
         // TODO: StartListening() will throw exception, catch it and give more specific help
-        if (!m_jsonrpcHttpServer->StartListening())
+        if (!m_jsonrpcHttpServer->StartListening())//http服务器 connector 开始监听，SafeHttpServer 的listen内注册了  callback回调函数，收到http则调用callback
         {
             INITIALIZER_LOG(ERROR)
                 << LOG_BADGE("RPCInitializer") << LOG_KV("ipv6", ipAddress.is_v6())
